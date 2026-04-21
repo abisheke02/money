@@ -247,9 +247,3 @@ function LicenseBadge({ plan }: { plan: string | null }) {
   if (plan === 'pro')     return <Badge variant="credit" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 font-black">PRO</Badge>
   return <Badge variant="default" className="font-black">FREE</Badge>
 }
-
-function LicenseBadge({ plan }: { plan: string | null }) {
-  if (plan === 'premium') return <Badge variant="credit" className="bg-amber-500/10 text-amber-400 border-amber-500/20 font-black">PREMIUM</Badge>
-  if (plan === 'pro')     return <Badge variant="credit" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 font-black">PRO</Badge>
-  return <Badge variant="default" className="font-black">FREE</Badge>
-}
