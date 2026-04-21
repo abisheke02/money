@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { useSearchParams } from 'next/navigation'
-import { Plus, Search, Filter, Edit2, Trash2, ChevronLeft, ChevronRight, X, Check, Download, Tags, Camera } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Plus, Search, Filter, Edit2, Trash2, ChevronLeft, ChevronRight, X, Check, Download, Tags, Camera, Lock } from 'lucide-react'
 import type { Transaction, Category } from '@/types'
 import { useBusiness } from '@/lib/contexts/BusinessContext'
 import { useCurrency } from '@/lib/contexts/CurrencyContext'
@@ -15,8 +15,12 @@ import Select from '@/components/ui/Select'
 import Badge from '@/components/ui/Badge'
 import { cn } from '@/lib/utils/format'
 
+import { usePlan } from '@/lib/contexts/PlanContext'
+
 export default function TransactionsPage() {
+  const router = useRouter()
   const { activeBusiness, loading: businessLoading } = useBusiness()
+  const { can } = usePlan()
   const searchParams = useSearchParams()
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -62,8 +66,15 @@ export default function TransactionsPage() {
   useEffect(() => { fetchData() }, [fetchData])
   useEffect(() => { 
     if (searchParams.get('action') === 'add') setShowModal(true) 
-    if (searchParams.get('action') === 'scan') { setShowModal(true); setShowScanner(true) }
-  }, [searchParams])
+    if (searchParams.get('action') === 'scan') { 
+      if (can('ocrScanner')) {
+        setShowModal(true); 
+        setShowScanner(true) 
+      } else {
+        router.push('/dashboard/pricing')
+      }
+    }
+  }, [searchParams, can, router])
 
   const totalPages = Math.ceil(total / filters.limit)
   const filteredCategories = useMemo(() => categories.filter((c: Category) => c.type === form.type || c.type === 'both'), [categories, form.type])
@@ -269,8 +280,15 @@ export default function TransactionsPage() {
         title={showScanner ? 'Scan Bill' : editingId ? 'Edit Transaction' : 'Add Transaction'}>
         <div className="absolute right-14 top-5">
            {!editingId && !showScanner && (
-            <Button variant="ghost" size="sm" onClick={() => setShowScanner(true)} title="Scan Receipt">
-              <Camera className="w-5 h-5 text-primary" />
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => can('ocrScanner') ? setShowScanner(true) : router.push('/dashboard/pricing')} 
+              title={can('ocrScanner') ? "Scan Receipt" : "Premium Only"}
+              className={cn(!can('ocrScanner') && "opacity-50 grayscale")}
+            >
+              <Camera className={cn("w-5 h-5", can('ocrScanner') ? "text-primary" : "text-slate-500")} />
+              {!can('ocrScanner') && <Lock className="w-2 h-2 absolute bottom-1 right-1 text-amber-500" />}
             </Button>
           )}
         </div>
