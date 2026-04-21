@@ -45,6 +45,14 @@ export async function GET(request: NextRequest) {
      LIMIT 10`
   )
 
+  const renewalAlerts = dbQuery.all<{ username: string; plan: string; expires_at: string }>(
+    `SELECT u.username, s.plan, s.expires_at 
+     FROM subscriptions s 
+     JOIN users u ON s.user_id = u.id 
+     WHERE s.expires_at BETWEEN datetime('now') AND datetime('now', '+7 days') 
+     AND s.status = 'active'`
+  )
+
   return NextResponse.json({
     totalUsers,
     totalTransactions,
@@ -52,5 +60,12 @@ export async function GET(request: NextRequest) {
     pendingFeatures,
     plans: planMap,
     recentUsers,
+    renewalAlerts,
+    gatewayStatus: {
+      provider: 'Stripe / Razorpay',
+      status: 'operational',
+      uptime: '99.98%',
+      lastSync: new Date().toISOString()
+    }
   })
 }

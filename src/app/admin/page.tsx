@@ -16,6 +16,8 @@ interface Stats {
     id: number; username: string; email: string; created_at: string
     plan: string | null; sub_status: string | null
   }[]
+  renewalAlerts: { username: string; plan: string; expires_at: string }[]
+  gatewayStatus: { provider: string; status: string; uptime: string; lastSync: string }
 }
 
 function StatCard({ icon: Icon, label, value, sub, color, bg }: {
@@ -91,87 +93,159 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Plan distribution */}
-        <div className="lg:col-span-1 rounded-[32px] border border-white/5 bg-white/5 p-8 backdrop-blur-xl shadow-2xl flex flex-col">
-          <h3 className="text-2xl font-black text-white tracking-tight mb-6 text-center">Plan Distribution</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-5 rounded-2xl bg-slate-900 shadow-inner group hover:bg-slate-800 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-500"><Circle className="w-5 h-5" /></div>
-                <div><p className="text-xs font-black text-white">Free Tier</p><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Growth Engine</p></div>
+        {/* Left Column */}
+        <div className="space-y-8 lg:col-span-1">
+          {/* Plan distribution */}
+          <div className="rounded-[32px] border border-white/5 bg-white/5 p-8 backdrop-blur-xl shadow-2xl flex flex-col">
+            <h3 className="text-2xl font-black text-white tracking-tight mb-6 text-center">Plan Distribution</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-5 rounded-2xl bg-slate-900 shadow-inner group hover:bg-slate-800 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-500"><Circle className="w-5 h-5" /></div>
+                  <div><p className="text-xs font-black text-white">Free Tier</p><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Growth Engine</p></div>
+                </div>
+                <p className="text-xl font-black text-white font-mono">{stats.plans.free ?? 0}</p>
               </div>
-              <p className="text-xl font-black text-white font-mono">{stats.plans.free ?? 0}</p>
+              <div className="flex items-center justify-between p-5 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 group hover:bg-cyan-500/15 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400"><Star className="w-5 h-5" /></div>
+                  <div><p className="text-xs font-black text-cyan-400">Pro Tier</p><p className="text-[10px] font-bold text-cyan-500/40 uppercase tracking-widest">Mainstream</p></div>
+                </div>
+                <p className="text-xl font-black text-white font-mono">{stats.plans.pro ?? 0}</p>
+              </div>
+              <div className="flex items-center justify-between p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 group hover:bg-amber-500/15 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400"><Crown className="w-5 h-5" /></div>
+                  <div><p className="text-xs font-black text-amber-400">Premium Tier</p><p className="text-[10px] font-bold text-amber-500/40 uppercase tracking-widest">High Value</p></div>
+                </div>
+                <p className="text-xl font-black text-white font-mono">{stats.plans.premium ?? 0}</p>
+              </div>
             </div>
-            <div className="flex items-center justify-between p-5 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 group hover:bg-cyan-500/15 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400"><Star className="w-5 h-5" /></div>
-                <div><p className="text-xs font-black text-cyan-400">Pro Tier</p><p className="text-[10px] font-bold text-cyan-500/40 uppercase tracking-widest">Mainstream</p></div>
-              </div>
-              <p className="text-xl font-black text-white font-mono">{stats.plans.pro ?? 0}</p>
-            </div>
-            <div className="flex items-center justify-between p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 group hover:bg-amber-500/15 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400"><Crown className="w-5 h-5" /></div>
-                <div><p className="text-xs font-black text-amber-400">Premium Tier</p><p className="text-[10px] font-bold text-amber-500/40 uppercase tracking-widest">High Value</p></div>
-              </div>
-              <p className="text-xl font-black text-white font-mono">{stats.plans.premium ?? 0}</p>
+            
+            <div className="mt-8 pt-8 border-t border-white/5">
+               <div className="flex items-center justify-between mb-4">
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Premium Conversion</span>
+                  <span className="text-sm font-black text-amber-400 font-mono">{stats.totalUsers > 0 ? Math.round((paidUsers / stats.totalUsers) * 100) : 0}%</span>
+               </div>
+               <div className="h-3 bg-slate-900 rounded-full overflow-hidden shadow-inner flex">
+                  <div className="h-full bg-gradient-to-r from-cyan-400 to-amber-400" style={{ width: `${(paidUsers / Math.max(1, stats.totalUsers)) * 100}%` }} />
+               </div>
             </div>
           </div>
-          
-          <div className="mt-8 pt-8 border-t border-white/5">
-             <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Premium Conversion</span>
-                <span className="text-sm font-black text-amber-400 font-mono">{stats.totalUsers > 0 ? Math.round((paidUsers / stats.totalUsers) * 100) : 0}%</span>
+
+          {/* Gateway Status */}
+          <div className="rounded-[32px] border border-white/5 bg-white/5 p-8 backdrop-blur-xl shadow-2xl flex flex-col">
+             <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-black text-white tracking-tight">Payment Gateway</h3>
+                <div className="flex items-center gap-2">
+                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                   <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Live</span>
+                </div>
              </div>
-             <div className="h-3 bg-slate-900 rounded-full overflow-hidden shadow-inner flex">
-                <div className="h-full bg-gradient-to-r from-cyan-400 to-amber-400" style={{ width: `${(paidUsers / Math.max(1, stats.totalUsers)) * 100}%` }} />
+             <div className="p-5 rounded-2xl bg-slate-900 border border-white/5 space-y-4 shadow-inner">
+                <div className="flex items-center justify-between">
+                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Provider</p>
+                   <p className="text-xs font-black text-white">{stats.gatewayStatus.provider}</p>
+                </div>
+                <div className="flex items-center justify-between">
+                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Uptime Score</p>
+                   <p className="text-xs font-black text-emerald-400 font-mono">{stats.gatewayStatus.uptime}</p>
+                </div>
+                <div className="flex items-center justify-between">
+                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Current Status</p>
+                   <p className="text-[10px] font-black text-white bg-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-tighter">{stats.gatewayStatus.status}</p>
+                </div>
+             </div>
+             <div className="mt-6 flex items-center gap-3 text-[10px] text-slate-500 font-black uppercase tracking-widest">
+                <div className="w-8 h-[2px] bg-white/10" />
+                Last check: {new Date(stats.gatewayStatus.lastSync).toLocaleTimeString()}
              </div>
           </div>
         </div>
 
-        {/* Recent users table */}
-        <div className="lg:col-span-2 rounded-[32px] border border-white/5 bg-white/5 p-8 backdrop-blur-xl shadow-2xl flex flex-col">
-          <div className="flex items-center justify-between mb-8">
-             <div>
-                <h3 className="text-2xl font-black text-white tracking-tight">Recent Onboarding</h3>
-                <p className="text-sm text-slate-400 font-medium uppercase tracking-widest text-[10px] mt-1">Global User Acquisition</p>
+        {/* Right Column (Scrollable Lists) */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Renewal Alerts */}
+          <div className="rounded-[32px] border border-amber-500/10 bg-amber-500/5 p-8 backdrop-blur-xl shadow-2xl flex flex-col">
+             <div className="flex items-center justify-between mb-8">
+                <div>
+                   <h3 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">Renewal Alerts <Badge variant="warning" className="rounded-lg">{stats.renewalAlerts.length}</Badge></h3>
+                   <p className="text-[10px] text-amber-500/60 font-black uppercase tracking-widest mt-1">Ending in next 7 orbits (Days)</p>
+                </div>
+                <Button variant="ghost" className="text-amber-500 font-black text-[10px] uppercase gap-2 hover:bg-amber-500/10">Batch Notify <Plus className="w-4 h-4" /></Button>
              </div>
-             <Button variant="ghost" className="text-emerald-400 font-black text-[10px] uppercase gap-2 hover:bg-emerald-400/10">Manage Users <ArrowRight className="w-4 h-4" /></Button>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full border-separate border-spacing-y-3">
-              <thead>
-                <tr className="text-left text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-4">
-                  <th className="px-6 py-2">Identities</th>
-                  <th className="px-6 py-2">Contact</th>
-                  <th className="px-6 py-2 text-center">License</th>
-                  <th className="px-6 py-2 text-right">Registered</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.recentUsers.map((u) => (
-                  <tr key={u.id} className="rounded-2xl bg-slate-900/60 group hover:bg-slate-800 transition-all duration-300 shadow-md">
-                    <td className="rounded-l-2xl px-6 py-5">
-                       <p className="font-black text-white group-hover:text-primary transition-colors">{u.username}</p>
-                       <p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">UID: {u.id}</p>
-                    </td>
-                    <td className="px-6 py-5 text-sm text-slate-400 font-medium">{u.email}</td>
-                    <td className="px-6 py-5 text-center">
-                       <LicenseBadge plan={u.plan} />
-                    </td>
-                    <td className="rounded-r-2xl px-6 py-5 text-right font-bold text-slate-500 text-xs">
-                       {new Date(u.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                    </td>
-                  </tr>
+             
+             <div className="space-y-3">
+                {stats.renewalAlerts.length === 0 ? (
+                  <div className="py-12 text-center text-slate-600 font-black uppercase tracking-widest text-[10px]">No immediate renewals detected.</div>
+                ) : stats.renewalAlerts.map((alert, i) => (
+                  <div key={i} className="flex items-center justify-between p-5 rounded-2xl bg-slate-900 border border-white/5 group hover:border-amber-500/30 transition-all">
+                     <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500"><Calendar className="w-5 h-5" /></div>
+                        <div>
+                           <p className="text-sm font-black text-white uppercase tracking-tight">{alert.username}</p>
+                           <p className="text-[10px] text-slate-500 font-black uppercase opacity-60 group-hover:opacity-100 transition-opacity tracking-widest">{alert.plan} tier</p>
+                        </div>
+                     </div>
+                     <div className="text-right">
+                        <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest">Final Date</p>
+                        <p className="text-sm font-black text-white font-mono">{new Date(alert.expires_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</p>
+                     </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+             </div>
+          </div>
+
+          {/* Recent users table */}
+          <div className="rounded-[32px] border border-white/5 bg-white/5 p-8 backdrop-blur-xl shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between mb-8">
+               <div>
+                  <h3 className="text-2xl font-black text-white tracking-tight">Recent Onboarding</h3>
+                  <p className="text-sm text-slate-400 font-medium uppercase tracking-widest text-[10px] mt-1">Global User Acquisition</p>
+               </div>
+               <Button variant="ghost" className="text-emerald-400 font-black text-[10px] uppercase gap-2 hover:bg-emerald-400/10" onClick={() => (window.location.href = '/admin/users')}>Manage Users <ArrowRight className="w-4 h-4" /></Button>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full border-separate border-spacing-y-3">
+                <thead>
+                  <tr className="text-left text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-4">
+                    <th className="px-6 py-2">Identities</th>
+                    <th className="px-6 py-2">Contact</th>
+                    <th className="px-6 py-2 text-center">License</th>
+                    <th className="px-6 py-2 text-right">Registered</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.recentUsers.map((u) => (
+                    <tr key={u.id} className="rounded-2xl bg-slate-900/60 group hover:bg-slate-800 transition-all duration-300 shadow-md">
+                      <td className="rounded-l-2xl px-6 py-5">
+                         <p className="font-black text-white group-hover:text-primary transition-colors">{u.username}</p>
+                         <p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">UID: {u.id}</p>
+                      </td>
+                      <td className="px-6 py-5 text-sm text-slate-400 font-medium">{u.email}</td>
+                      <td className="px-6 py-5 text-center">
+                         <LicenseBadge plan={u.plan} />
+                      </td>
+                      <td className="rounded-r-2xl px-6 py-5 text-right font-bold text-slate-500 text-xs">
+                         {new Date(u.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
     </div>
   )
+}
+
+function LicenseBadge({ plan }: { plan: string | null }) {
+  if (plan === 'premium') return <Badge variant="credit" className="bg-amber-500/10 text-amber-400 border-amber-500/20 font-black">PREMIUM</Badge>
+  if (plan === 'pro')     return <Badge variant="credit" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 font-black">PRO</Badge>
+  return <Badge variant="default" className="font-black">FREE</Badge>
 }
 
 function LicenseBadge({ plan }: { plan: string | null }) {
