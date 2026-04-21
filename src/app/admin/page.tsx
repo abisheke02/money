@@ -1,7 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Users, CreditCard, IndianRupee, Lightbulb, TrendingUp, Crown, Star, Circle } from 'lucide-react'
+import { Users, CreditCard, IndianRupee, Lightbulb, TrendingUp, Crown, Star, Circle, ArrowRight, ShieldCheck } from 'lucide-react'
+import Button from '@/components/ui/Button'
+import Badge from '@/components/ui/Badge'
+import { cn } from '@/lib/utils/format'
 
 interface Stats {
   totalUsers: number
@@ -15,19 +18,19 @@ interface Stats {
   }[]
 }
 
-function StatCard({ icon: Icon, label, value, sub, color }: {
-  icon: React.ElementType; label: string; value: string | number; sub?: string; color: string
+function StatCard({ icon: Icon, label, value, sub, color, bg }: {
+  icon: React.ElementType; label: string; value: string | number; sub?: string; color: string; bg: string
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-medium text-slate-400">{label}</p>
-        <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${color}`}>
-          <Icon className="w-4 h-4" />
+    <div className={cn("rounded-[32px] border border-white/10 bg-gradient-to-br p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl", bg)}>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{label}</p>
+        <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center shadow-inner", color)}>
+          <Icon className="w-5 h-5" />
         </div>
       </div>
-      <p className="text-2xl font-bold text-white">{value}</p>
-      {sub && <p className="text-xs text-slate-500 mt-1">{sub}</p>}
+      <p className="text-3xl font-black text-white font-mono tabular-nums">{value}</p>
+      {sub && <p className="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-tight">{sub}</p>}
     </div>
   )
 }
@@ -49,110 +52,130 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
-  if (!stats) return <p className="text-slate-400">Failed to load stats.</p>
+  if (!stats) return (
+    <div className="flex flex-col items-center justify-center h-64 text-slate-500 gap-4">
+       <div className="p-4 rounded-full bg-white/5"><ShieldCheck className="w-10 h-10" /></div>
+       <p className="font-bold">Access restricted or failed to load stats.</p>
+    </div>
+  )
 
   const paidUsers = (stats.plans.pro ?? 0) + (stats.plans.premium ?? 0)
   const revenue = stats.totalRevenue.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Overview</h1>
-        <p className="text-sm text-slate-400 mt-1">Platform-wide stats and recent activity</p>
-      </div>
+    <div className="space-y-8 max-w-[1400px] mx-auto pb-10">
+      {/* Header */}
+      <header className="flex flex-col gap-6 rounded-[32px] border border-white/10 bg-white/5 p-8 backdrop-blur-xl md:flex-row md:items-center md:justify-between shadow-2xl">
+        <div>
+          <p className="text-[10px] text-primary font-black tracking-[0.2em] uppercase">Control Panel</p>
+          <h1 className="text-3xl font-black text-white mt-1">Platform Intelligence</h1>
+          <p className="text-sm text-slate-400 font-medium mt-2">Real-time oversight of users, revenue, and platform health.</p>
+        </div>
+        <div className="flex gap-3">
+           <Button variant="outline" className="rounded-2xl px-6">Export Reports</Button>
+           <Button className="rounded-2xl px-6">System Health</Button>
+        </div>
+      </header>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Users}        label="Total Users"        value={stats.totalUsers}       color="bg-blue-500/20 text-blue-400" />
-        <StatCard icon={TrendingUp}   label="Transactions"       value={stats.totalTransactions} sub="across all users" color="bg-emerald-500/20 text-emerald-400" />
-        <StatCard icon={IndianRupee}  label="Total Revenue"      value={revenue}                color="bg-amber-500/20 text-amber-400" />
-        <StatCard icon={Lightbulb}    label="Pending Features"   value={stats.pendingFeatures}  color="bg-violet-500/20 text-violet-400" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard icon={Users} label="Total Userbase" value={stats.totalUsers} color="bg-blue-500/20 text-blue-400" bg="from-blue-500/10 to-white/5" />
+        <StatCard icon={TrendingUp} label="Platform Activity" value={stats.totalTransactions.toLocaleString()} sub="global transactions" color="bg-emerald-500/20 text-emerald-400" bg="from-emerald-500/10 to-white/5" />
+        <StatCard icon={IndianRupee} label="Gross Revenue" value={revenue} color="bg-amber-500/20 text-amber-400" bg="from-amber-500/10 to-white/5" />
+        <StatCard icon={Lightbulb} label="Product Backlog" value={stats.pendingFeatures} sub="voted features" color="bg-violet-500/20 text-violet-400" bg="from-violet-500/10 to-white/5" />
       </div>
 
-      {/* Plan breakdown */}
-      <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
-        <h2 className="text-sm font-semibold text-white mb-4">Plan Distribution</h2>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="text-center p-4 rounded-xl bg-slate-800/60 border border-white/5">
-            <Circle className="w-5 h-5 text-slate-400 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">{stats.plans.free ?? 0}</p>
-            <p className="text-xs text-slate-400 mt-1">Free</p>
-            <p className="text-[10px] text-slate-600">₹0/mo</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Plan distribution */}
+        <div className="lg:col-span-1 rounded-[32px] border border-white/5 bg-white/5 p-8 backdrop-blur-xl shadow-2xl flex flex-col">
+          <h3 className="text-2xl font-black text-white tracking-tight mb-6 text-center">Plan Distribution</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-5 rounded-2xl bg-slate-900 shadow-inner group hover:bg-slate-800 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-500"><Circle className="w-5 h-5" /></div>
+                <div><p className="text-xs font-black text-white">Free Tier</p><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Growth Engine</p></div>
+              </div>
+              <p className="text-xl font-black text-white font-mono">{stats.plans.free ?? 0}</p>
+            </div>
+            <div className="flex items-center justify-between p-5 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 group hover:bg-cyan-500/15 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400"><Star className="w-5 h-5" /></div>
+                <div><p className="text-xs font-black text-cyan-400">Pro Tier</p><p className="text-[10px] font-bold text-cyan-500/40 uppercase tracking-widest">Mainstream</p></div>
+              </div>
+              <p className="text-xl font-black text-white font-mono">{stats.plans.pro ?? 0}</p>
+            </div>
+            <div className="flex items-center justify-between p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 group hover:bg-amber-500/15 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400"><Crown className="w-5 h-5" /></div>
+                <div><p className="text-xs font-black text-amber-400">Premium Tier</p><p className="text-[10px] font-bold text-amber-500/40 uppercase tracking-widest">High Value</p></div>
+              </div>
+              <p className="text-xl font-black text-white font-mono">{stats.plans.premium ?? 0}</p>
+            </div>
           </div>
-          <div className="text-center p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
-            <Star className="w-5 h-5 text-cyan-400 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">{stats.plans.pro ?? 0}</p>
-            <p className="text-xs text-cyan-400 mt-1">Pro</p>
-            <p className="text-[10px] text-slate-500">₹199/mo</p>
-          </div>
-          <div className="text-center p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-            <Crown className="w-5 h-5 text-amber-400 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">{stats.plans.premium ?? 0}</p>
-            <p className="text-xs text-amber-400 mt-1">Premium</p>
-            <p className="text-[10px] text-slate-500">₹499/mo</p>
+          
+          <div className="mt-8 pt-8 border-t border-white/5">
+             <div className="flex items-center justify-between mb-4">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Premium Conversion</span>
+                <span className="text-sm font-black text-amber-400 font-mono">{stats.totalUsers > 0 ? Math.round((paidUsers / stats.totalUsers) * 100) : 0}%</span>
+             </div>
+             <div className="h-3 bg-slate-900 rounded-full overflow-hidden shadow-inner flex">
+                <div className="h-full bg-gradient-to-r from-cyan-400 to-amber-400" style={{ width: `${(paidUsers / Math.max(1, stats.totalUsers)) * 100}%` }} />
+             </div>
           </div>
         </div>
-        <div className="mt-4 flex items-center gap-2">
-          <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
-            {stats.totalUsers > 0 && (
-              <>
-                <div
-                  className="h-full bg-gradient-to-r from-violet-500 to-amber-400 rounded-full"
-                  style={{ width: `${(paidUsers / stats.totalUsers) * 100}%` }}
-                />
-              </>
-            )}
-          </div>
-          <span className="text-xs text-slate-400">
-            {stats.totalUsers > 0 ? Math.round((paidUsers / stats.totalUsers) * 100) : 0}% paid
-          </span>
-        </div>
-      </div>
 
-      {/* Recent users */}
-      <div className="rounded-2xl border border-white/10 bg-slate-900 overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/5">
-          <h2 className="text-sm font-semibold text-white">Recent Signups</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-white/5">
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">User</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Email</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Plan</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Joined</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.recentUsers.map((u) => (
-                <tr key={u.id} className="border-b border-white/5 hover:bg-white/2 transition-colors">
-                  <td className="px-5 py-3 font-medium text-white">{u.username}</td>
-                  <td className="px-5 py-3 text-slate-400">{u.email}</td>
-                  <td className="px-5 py-3">
-                    <PlanBadge plan={u.plan} />
-                  </td>
-                  <td className="px-5 py-3 text-slate-500">{new Date(u.created_at).toLocaleDateString()}</td>
+        {/* Recent users table */}
+        <div className="lg:col-span-2 rounded-[32px] border border-white/5 bg-white/5 p-8 backdrop-blur-xl shadow-2xl flex flex-col">
+          <div className="flex items-center justify-between mb-8">
+             <div>
+                <h3 className="text-2xl font-black text-white tracking-tight">Recent Onboarding</h3>
+                <p className="text-sm text-slate-400 font-medium uppercase tracking-widest text-[10px] mt-1">Global User Acquisition</p>
+             </div>
+             <Button variant="ghost" className="text-emerald-400 font-black text-[10px] uppercase gap-2 hover:bg-emerald-400/10">Manage Users <ArrowRight className="w-4 h-4" /></Button>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full border-separate border-spacing-y-3">
+              <thead>
+                <tr className="text-left text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-4">
+                  <th className="px-6 py-2">Identities</th>
+                  <th className="px-6 py-2">Contact</th>
+                  <th className="px-6 py-2 text-center">License</th>
+                  <th className="px-6 py-2 text-right">Registered</th>
                 </tr>
-              ))}
-              {stats.recentUsers.length === 0 && (
-                <tr><td colSpan={4} className="px-5 py-8 text-center text-slate-500">No users yet</td></tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {stats.recentUsers.map((u) => (
+                  <tr key={u.id} className="rounded-2xl bg-slate-900/60 group hover:bg-slate-800 transition-all duration-300 shadow-md">
+                    <td className="rounded-l-2xl px-6 py-5">
+                       <p className="font-black text-white group-hover:text-primary transition-colors">{u.username}</p>
+                       <p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">UID: {u.id}</p>
+                    </td>
+                    <td className="px-6 py-5 text-sm text-slate-400 font-medium">{u.email}</td>
+                    <td className="px-6 py-5 text-center">
+                       <LicenseBadge plan={u.plan} />
+                    </td>
+                    <td className="rounded-r-2xl px-6 py-5 text-right font-bold text-slate-500 text-xs">
+                       {new Date(u.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-function PlanBadge({ plan }: { plan: string | null }) {
-  if (plan === 'premium') return <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold">PREMIUM</span>
-  if (plan === 'pro')     return <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 text-[10px] font-bold">PRO</span>
-  return <span className="px-2 py-0.5 rounded-full bg-slate-700 text-slate-400 text-[10px] font-bold">FREE</span>
+function LicenseBadge({ plan }: { plan: string | null }) {
+  if (plan === 'premium') return <Badge variant="credit" className="bg-amber-500/10 text-amber-400 border-amber-500/20 font-black">PREMIUM</Badge>
+  if (plan === 'pro')     return <Badge variant="credit" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 font-black">PRO</Badge>
+  return <Badge variant="default" className="font-black">FREE</Badge>
 }
