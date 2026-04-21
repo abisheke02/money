@@ -1,0 +1,60 @@
+'use client'
+
+import { createContext, useContext, ReactNode } from 'react'
+import { useLocalStorage } from '@/lib/hooks/useLocalStorage'
+
+export type Plan = 'free' | 'pro' | 'premium'
+
+interface PlanFeatures {
+  maxBusinesses: number
+  editCategories: boolean
+  overall: boolean
+  receivables: boolean
+  aiAdvisor: boolean
+  exportCSV: boolean
+  exportJSON: boolean
+}
+
+export const PLAN_FEATURES: Record<Plan, PlanFeatures> = {
+  free:    { maxBusinesses: 1,        editCategories: false, overall: false, receivables: false, aiAdvisor: false, exportCSV: false, exportJSON: false },
+  pro:     { maxBusinesses: 3,        editCategories: true,  overall: true,  receivables: true,  aiAdvisor: false, exportCSV: true,  exportJSON: false },
+  premium: { maxBusinesses: Infinity, editCategories: true,  overall: true,  receivables: true,  aiAdvisor: true,  exportCSV: true,  exportJSON: true  },
+}
+
+export const PLAN_LABELS: Record<Plan, { name: string; price: string; color: string; badge: string }> = {
+  free:    { name: 'Free',    price: '₹0/mo',   color: 'text-slate-400', badge: 'bg-slate-500/20 text-slate-300' },
+  pro:     { name: 'Pro',     price: '₹199/mo', color: 'text-cyan-400',  badge: 'bg-cyan-500/20 text-cyan-300'  },
+  premium: { name: 'Premium', price: '₹499/mo', color: 'text-amber-400', badge: 'bg-amber-500/20 text-amber-300'},
+}
+
+interface PlanContextType {
+  plan: Plan
+  features: PlanFeatures
+  setPlan: (p: Plan) => void
+  can: (feature: keyof PlanFeatures) => boolean
+}
+
+const PlanContext = createContext<PlanContextType>({
+  plan: 'free', features: PLAN_FEATURES.free, setPlan: () => {}, can: () => false,
+})
+
+function isValidPlan(v: unknown): v is Plan {
+  return v === 'free' || v === 'pro' || v === 'premium'
+}
+
+export function PlanProvider({ children }: { children: ReactNode }) {
+  const [plan, setPlanStored] = useLocalStorage<Plan>('moneyflow_plan', 'free')
+  const validPlan: Plan = isValidPlan(plan) ? plan : 'free'
+
+  const setPlan = (p: Plan) => setPlanStored(p)
+  const features = PLAN_FEATURES[validPlan]
+  const can = (feature: keyof PlanFeatures) => !!features[feature]
+
+  return (
+    <PlanContext.Provider value={{ plan: validPlan, features, setPlan, can }}>
+      {children}
+    </PlanContext.Provider>
+  )
+}
+
+export const usePlan = () => useContext(PlanContext)

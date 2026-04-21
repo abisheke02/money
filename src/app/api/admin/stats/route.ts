@@ -1,0 +1,56 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAdmin } from '../_auth'
+import dbQuery from '@/lib/db'
+
+export async function GET(request: NextRequest) {
+  if (!requireAdmin(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const totalUsers = (dbQuery.get<{ count: number }>('SELECT COUNT(*) as count FROM users WHERE role = ?', ['user']))?.count ?? 0
+  const totalTransactions = (dbQuery.get<{ count: number }>('SELECT COUNT(*) as count FROM transactions'))?.count ?? 0
+
+  const planCounts = dbQuery.all<{ plan: string; count: number }>(
+    `SELECT s.plan, COUNT(*) as count FROM subscriptions s
+     WHERE s.status = 'active'
+     GROUP BY s.plan`
+  )
+  const planMap: Record<string, number> = { free: 0, pro: 0, premium: 0 }
+  for (const row of planCounts) planMap[row.plan] = row.count
+
+  const usersWithoutSub = (dbQuery.get<{ count: number }>(
+    `SELECT COUNT(*) as count FROM users u
+     WHERE u.role = 'user'
+     AND NOT EXISTS (SELECT 1 FROM subscriptions s WHERE s.user_id = u.id AND s.status = 'active')`
+  ))?.count ?? 0
+  planMap.free += usersWithoutSub
+
+  const totalRevenue = (dbQuery.get<{ total: number }>(
+    "SELECT COALESCE(SUM(amount_paid), 0) as total FROM subscriptions WHERE status != 'cancelled'"
+  ))?.total ?? 0
+
+  const pendingFeatures = (dbQuery.get<{ count: number }>(
+    "SELECT COUNT(*) as count FROM feature_requests WHERE status IN ('pending', 'in_progress')"
+  ))?.count ?? 0
+
+  const recentUsers = dbQuery.all<{
+    id: number; username: string; email: string; created_at: string; plan: string | null; sub_status: string | null
+  }>(
+    `SELECT u.id, u.username, u.email, u.created_at,
+            s.plan, s.status as sub_status
+     FROM users u
+     LEFT JOIN subscriptions s ON s.user_id = u.id AND s.status = 'active'
+     WHERE u.role = 'user'
+     ORDER BY u.created_at DESC
+     LIMIT 10`
+  )
+
+  return NextResponse.json({
+    totalUsers,
+    totalTransactions,
+    totalRevenue,
+    pendingFeatures,
+    plans: planMap,
+    recentUsers,
+  })
+}
