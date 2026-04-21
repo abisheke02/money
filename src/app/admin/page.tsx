@@ -46,8 +46,15 @@ export default function AdminDashboardPage() {
     if (!raw) return
     const { token } = JSON.parse(raw)
     fetch('/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error('Unauthorized')
+        return r.json()
+      })
       .then(setStats)
+      .catch((err) => {
+        console.error('Fetch error:', err)
+        setStats(null)
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -59,14 +66,14 @@ export default function AdminDashboardPage() {
     )
   }
 
-  if (!stats) return (
+  if (!stats || !stats.plans) return (
     <div className="flex flex-col items-center justify-center h-64 text-slate-500 gap-4">
        <div className="p-4 rounded-full bg-white/5"><ShieldCheck className="w-10 h-10" /></div>
        <p className="font-bold">Access restricted or failed to load stats.</p>
     </div>
   )
 
-  const paidUsers = (stats.plans.pro ?? 0) + (stats.plans.premium ?? 0)
+  const paidUsers = (stats.plans?.pro ?? 0) + (stats.plans?.premium ?? 0)
   const revenue = stats.totalRevenue.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })
 
   return (
