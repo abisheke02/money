@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Mail, Lock, Wallet, Zap } from 'lucide-react'
+import { ArrowLeft, Mail, Lock, Zap, ShieldCheck, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
+import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -46,103 +48,98 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-md">
-        <button
-          onClick={() => router.back()}
-          className="absolute -top-12 left-0 p-2 text-slate-400 hover:text-white"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 mx-auto bg-gradient-to-br from-emerald-400 to-cyan-500 shadow-lg shadow-emerald-500/30">
-            <span className="text-2xl font-black text-slate-950">₹</span>
-          </div>
-          <h1 className="text-3xl font-bold text-white mb-1">Money Flow</h1>
-          <p className="text-slate-400 text-sm">Smart Finance Dashboard</p>
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent">
+      <div className="w-full max-w-md animate-fadeIn">
+        <div className="text-center mb-10">
+          <div className="inline-flex h-20 w-20 items-center justify-center rounded-[24px] bg-gradient-to-br from-emerald-400 to-cyan-500 text-3xl font-black text-slate-950 shadow-2xl shadow-emerald-500/30 ring-8 ring-emerald-500/10 mb-6 font-mono">₹</div>
+          <h1 className="text-4xl font-black text-white tracking-tight">Access Hub</h1>
+          <p className="mt-2 text-slate-400 font-medium">Continue your financial journey.</p>
         </div>
 
-        <div className="rounded-[28px] border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl">
+        <div className="rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-2xl p-8 shadow-2xl space-y-8">
           {/* Demo Login Button */}
           <button
             onClick={handleDemoLogin}
             disabled={loading}
-            className="w-full mb-5 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-500 px-5 py-4 font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition disabled:opacity-60"
+            className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-500 p-px shadow-lg shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-60"
           >
-            <Zap className="w-5 h-5" />
-            {loading ? 'Signing in...' : 'Try Demo — One Click Login'}
+            <div className="flex items-center justify-center gap-2 rounded-[15px] bg-slate-950/80 px-6 py-4 font-black text-emerald-400 backdrop-blur-xl transition group-hover:bg-transparent group-hover:text-slate-950">
+              <Zap className="w-5 h-5" />
+              {loading ? 'Authenticating...' : 'Instant Demo Access'}
+            </div>
           </button>
 
-          <div className="flex items-center gap-3 mb-5">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-xs text-slate-500">or sign in manually</span>
-            <div className="flex-1 h-px bg-white/10" />
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10" /></div>
+            <div className="relative flex justify-center text-[10px] uppercase font-black tracking-[0.2em]"><span className="bg-[#0f172a] p-2 text-slate-500 backdrop-blur-md rounded-lg border border-white/5">Manual Entry</span></div>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-300 text-sm">
-              {error}
+            <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-300 text-xs font-bold animate-shake">
+              <div className="flex gap-2">
+                <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+                {error}
+              </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                Username or Email
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 px-1">
+                <Mail className="w-3.5 h-3.5" />
+                User Identity
               </label>
-              <input
+              <Input
                 type="text"
                 required
                 value={form.username}
                 onChange={e => setForm({ ...form, username: e.target.value })}
-                className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-emerald-400 transition"
                 placeholder="demo"
+                autoComplete="username"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
-                <Lock className="w-4 h-4" />
-                Password
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 px-1">
+                <Lock className="w-3.5 h-3.5" />
+                Access Key
               </label>
-              <input
+              <Input
                 type="password"
                 required
                 value={form.password}
                 onChange={e => setForm({ ...form, password: e.target.value })}
-                className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-emerald-400 transition"
                 placeholder="••••••••"
+                autoComplete="current-password"
               />
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="w-full rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-semibold text-white hover:bg-white/15 transition disabled:opacity-60"
+              className="w-full h-14 rounded-2xl font-black text-lg gap-2 mt-4"
             >
               {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Signing In...
-                </span>
-              ) : 'Sign In'}
-            </button>
+                <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>Sign In <ChevronRight className="w-5 h-5" /></>
+              )}
+            </Button>
           </form>
 
-          <div className="text-center mt-5">
-            <p className="text-sm text-slate-500">
-              No account?{' '}
-              <Link href="/auth/register" className="text-emerald-400 hover:text-emerald-300 font-medium">
-                Create one
+          <div className="text-center pt-2">
+            <p className="text-xs text-slate-500 font-medium">
+              New to MoneyFlow?{' '}
+              <Link href="/auth/register" className="text-emerald-400 hover:text-emerald-300 font-black transition-colors">
+                Create Identity
               </Link>
-            </p>
-            <p className="text-xs text-slate-600 mt-2">
-              Demo credentials: <code className="text-emerald-400">demo</code> / <code className="text-emerald-400">demo</code>
             </p>
           </div>
         </div>
+
+        <p className="text-center mt-8 text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em]">
+           Protected by SecureFlow Intelligence
+        </p>
       </div>
     </div>
   )

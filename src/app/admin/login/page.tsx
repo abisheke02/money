@@ -2,7 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Shield, Lock, User } from 'lucide-react'
+import { Shield, Lock, User, ArrowLeft, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
+import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -39,77 +42,80 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/30">
-            <Shield className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent">
+      <div className="w-full max-w-md animate-fadeIn">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 mb-8 text-slate-500 hover:text-white transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span className="text-xs font-black uppercase tracking-widest">Back to Front</span>
+        </Link>
+
+        <div className="text-center mb-10">
+          <div className="inline-flex h-20 w-20 items-center justify-center rounded-[24px] bg-gradient-to-br from-violet-500 to-purple-600 text-3xl font-black text-white shadow-2xl shadow-violet-500/30 ring-8 ring-violet-500/10 mb-6">
+             <Shield className="w-10 h-10" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-1">Admin Panel</h1>
-          <p className="text-slate-400 text-sm">MoneyFlow — Restricted Access</p>
+          <h1 className="text-4xl font-black text-white tracking-tight">Admin OS</h1>
+          <p className="mt-2 text-slate-400 font-medium text-sm">MoneyFlow — Restricted Internal Access</p>
         </div>
 
-        <div className="rounded-[28px] border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl">
+        <div className="rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-2xl p-8 shadow-2xl space-y-8">
           {error && (
-            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-300 text-sm">
-              {error}
+            <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-300 text-xs font-bold animate-shake">
+              <div className="flex gap-2">
+                <Shield className="w-4 h-4 flex-shrink-0" />
+                {error}
+              </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
-                <User className="w-4 h-4" />
-                Username or Email
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 px-1">
+                <User className="w-3.5 h-3.5" />
+                Operator Identity
               </label>
-              <input
+              <Input
                 type="text"
                 required
                 value={form.username}
                 onChange={e => setForm({ ...form, username: e.target.value })}
-                className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-violet-400 transition"
                 placeholder="admin"
                 autoComplete="username"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
-                <Lock className="w-4 h-4" />
-                Password
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 px-1">
+                <Lock className="w-3.5 h-3.5" />
+                Security Key
               </label>
-              <input
+              <Input
                 type="password"
                 required
                 value={form.password}
                 onChange={e => setForm({ ...form, password: e.target.value })}
-                className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-violet-400 transition"
                 placeholder="••••••••"
                 autoComplete="current-password"
               />
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="w-full rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 px-5 py-3 text-sm font-semibold text-white hover:opacity-90 active:scale-95 transition shadow-lg shadow-violet-500/20 disabled:opacity-60"
+              className="w-full h-14 rounded-2xl font-black text-lg gap-2 mt-4 bg-gradient-to-r from-violet-500 to-purple-600 hover:opacity-90"
             >
               {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Signing In...
-                </span>
+                <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <span className="flex items-center justify-center gap-2">
-                  <Shield className="w-4 h-4" />
-                  Sign In to Admin
-                </span>
+                <>Enter Portal <ChevronRight className="w-5 h-5" /></>
               )}
-            </button>
+            </Button>
           </form>
 
-          <p className="text-center text-xs text-slate-600 mt-5">
-            Default: <code className="text-violet-400">admin</code> / <code className="text-violet-400">admin123</code>
+          <p className="text-center text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em] pt-4">
+            Authorized Personnel Only
           </p>
         </div>
       </div>

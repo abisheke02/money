@@ -77,6 +77,7 @@ function patchLegacyColumns(db: Database.Database): void {
   }
 
   seedAdminUser(db)
+  seedDemoUser(db)
 }
 
 function seedAdminUser(db: Database.Database): void {
@@ -90,6 +91,20 @@ function seedAdminUser(db: Database.Database): void {
     console.log('[db] Admin user seeded — login: admin / admin123')
   } catch (err) {
     console.error('[db] Failed to seed admin user:', err)
+  }
+}
+
+function seedDemoUser(db: Database.Database): void {
+  try {
+    const existing = db.prepare("SELECT id FROM users WHERE username = 'demo'").get()
+    if (existing) return
+    const password = Buffer.from('demo').toString('base64')
+    db.prepare(
+      "INSERT OR IGNORE INTO users (username, email, password, role) VALUES ('demo', 'demo@moneyflow.app', ?, 'user')"
+    ).run(password)
+    console.log('[db] Demo user seeded — login: demo / demo')
+  } catch (err) {
+    console.error('[db] Failed to seed demo user:', err)
   }
 }
 
