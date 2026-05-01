@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
     }
 
-    const amount = PLAN_PRICING[plan]
+    const amount = PLAN_PRICING[plan as keyof typeof PLAN_PRICING]
 
     // Create an order via Razorpay API
     const order = await razorpay.orders.create({
