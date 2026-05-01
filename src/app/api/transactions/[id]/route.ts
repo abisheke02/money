@@ -42,7 +42,7 @@ export async function PUT(
     const validation = transactionSchema.safeParse(body)
     
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 })
+      return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 })
     }
     
     const { type, amount, category_id, business_id, currency, date, due_date, reminder_days, note, method, tags, status, client_name } = validation.data

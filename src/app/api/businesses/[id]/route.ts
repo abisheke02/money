@@ -7,7 +7,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const body = await request.json()
     const validation = businessSchema.safeParse(body)
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 })
+      return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 })
     }
 
     const { name } = validation.data
