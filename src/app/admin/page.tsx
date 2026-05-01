@@ -176,7 +176,7 @@ export default function AdminDashboardPage() {
           <div className="rounded-[32px] border border-amber-500/10 bg-amber-500/5 p-8 backdrop-blur-xl shadow-2xl flex flex-col">
              <div className="flex items-center justify-between mb-8">
                 <div>
-                   <h3 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">Renewal Alerts <Badge variant="warning" className="rounded-lg">{stats.renewalAlerts.length}</Badge></h3>
+                   <h3 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">Renewal Alerts <Badge variant="pending" className="rounded-lg">{stats.renewalAlerts.length}</Badge></h3>
                    <p className="text-[10px] text-amber-500/60 font-black uppercase tracking-widest mt-1">Ending in next 7 orbits (Days)</p>
                 </div>
                 <Button variant="ghost" className="text-amber-500 font-black text-[10px] uppercase gap-2 hover:bg-amber-500/10">Batch Notify <Plus className="w-4 h-4" /></Button>
