@@ -1,22 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
 import crypto from 'crypto'
+import dbQuery from '@/lib/db'
+import { verifyPassword } from '@/lib/auth/password'
 import { loginSchema } from '@/lib/schemas'
+
+const hasRealResend = () =>
+  !!process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 're_dummy_123'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const validation = loginSchema.safeParse(body)
-
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 })
+      return NextResponse.json(
+        { error: validation.error.issues[0]?.message ?? 'Validation error' },
+        { status: 400 }
+      )
     }
-    
+
     const { username, password } = validation.data
 
-    // Find user by username or email
-    const user = dbQuery.get(
-      'SELECT id FROM users WHERE username = ? OR email = ?',
+    const user = dbQuery.get<{
+      id: number; username: string; email: string
+      password: string; email_verified: number
+    }>(
+      'SELECT id, username, email, password, email_verified FROM users WHERE username = ? OR email = ?',
       [username, username]
     )
 
@@ -24,35 +32,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
-    // Check password (base64 match for demo)
-    const hash = Buffer.from(password).toString('base64')
+    // Support both bcrypt (new accounts) and base64 (legacy demo/admin)
+    let passwordOk = false
+    if (user.password.startsWith('$2')) {
+      passwordOk = await verifyPassword(password, user.password)
+    } else {
+      passwordOk = user.password === Buffer.from(password).toString('base64')
+    }
 
-    const userWithPass = dbQuery.get(
-      'SELECT id FROM users WHERE (username = ? OR email = ?) AND password = ?',
-      [username, username, hash]
-    )
-
-    if (!userWithPass) {
+    if (!passwordOk) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
-    // Set session (client-side localStorage)
-    const sessionToken = crypto.randomUUID()
-
-    // Store session (simple table for demo)
-    dbQuery.transaction((tx) => {
-      tx.prepare('INSERT INTO sessions (user_id, token, expires_at, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(token) DO NOTHING').run(
-        userWithPass.id, sessionToken, new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), new Date().toISOString()
+    // Block login if real email service is active and user hasn't verified
+    if (hasRealResend() && user.email_verified === 0) {
+      return NextResponse.json(
+        {
+          error: 'Please verify your email before logging in.',
+          code: 'EMAIL_NOT_VERIFIED',
+          email: user.email,
+        },
+        { status: 403 }
       )
-    })
+    }
 
-    return NextResponse.json({ 
-      message: 'Login successful',
-      userId: userWithPass.id,
-      sessionToken
-    })
-  } catch (error) {
-    console.error('Login error:', error)
+    const sessionToken = crypto.randomUUID()
+    dbQuery.run(
+      'INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)',
+      [user.id, sessionToken, new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()]
+    )
+
+    return NextResponse.json({ message: 'Login successful', userId: user.id, sessionToken })
+  } catch (err) {
+    console.error('Login error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

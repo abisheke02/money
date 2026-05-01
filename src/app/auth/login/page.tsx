@@ -1,21 +1,27 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, Mail, Lock, Zap, ShieldCheck, ChevronRight } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Mail, Lock, Zap, ShieldCheck, ChevronRight, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [form, setForm] = useState({ username: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
+  const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
+
+  const verified = searchParams.get('verified') === 'true'
 
   const doLogin = async (username: string, password: string) => {
     setLoading(true)
     setError('')
+    setUnverifiedEmail(null)
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -23,17 +29,36 @@ export default function LoginPage() {
         body: JSON.stringify({ username, password })
       })
 
+      const data = await res.json()
+
       if (res.ok) {
         localStorage.setItem('moneyflow_auth', 'logged_in')
         router.push('/dashboard')
+      } else if (data.code === 'EMAIL_NOT_VERIFIED') {
+        setError(data.error)
+        setUnverifiedEmail(data.email ?? null)
       } else {
-        const data = await res.json()
         setError(data.error || 'Invalid credentials')
       }
     } catch {
       setError('Network error. Please try again.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResend = async () => {
+    if (!unverifiedEmail) return
+    setResendStatus('sending')
+    try {
+      await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: unverifiedEmail }),
+      })
+      setResendStatus('sent')
+    } catch {
+      setResendStatus('idle')
     }
   }
 
@@ -74,11 +99,30 @@ export default function LoginPage() {
             <div className="relative flex justify-center text-[10px] uppercase font-black tracking-[0.2em]"><span className="bg-[#0f172a] p-2 text-slate-500 backdrop-blur-md rounded-lg border border-white/5">Manual Entry</span></div>
           </div>
 
+          {verified && (
+            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-300 text-xs font-bold">
+              Email verified! You can now sign in.
+            </div>
+          )}
+
           {error && (
             <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-300 text-xs font-bold animate-shake">
-              <div className="flex gap-2">
-                <ShieldCheck className="w-4 h-4 flex-shrink-0" />
-                {error}
+              <div className="flex gap-2 items-start">
+                <ShieldCheck className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <span>{error}</span>
+                  {unverifiedEmail && (
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      disabled={resendStatus !== 'idle'}
+                      className="mt-2 flex items-center gap-1.5 text-rose-200 hover:text-white disabled:opacity-50 transition-colors"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      {resendStatus === 'sent' ? 'Email sent!' : resendStatus === 'sending' ? 'Sending…' : 'Resend verification email'}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -100,10 +144,15 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 px-1">
-                <Lock className="w-3.5 h-3.5" />
-                Access Key
-              </label>
+              <div className="flex items-center justify-between px-1">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <Lock className="w-3.5 h-3.5" />
+                  Access Key
+                </label>
+                <Link href="/auth/forgot-password" className="text-[10px] font-bold text-slate-500 hover:text-emerald-400 transition-colors uppercase tracking-widest">
+                  Forgot?
+                </Link>
+              </div>
               <Input
                 type="password"
                 required

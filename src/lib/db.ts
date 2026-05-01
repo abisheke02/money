@@ -75,6 +75,10 @@ function patchLegacyColumns(db: Database.Database): void {
   if (!userCols.includes('role')) {
     try { db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'") } catch { /* already exists */ }
   }
+  // DEFAULT 1 so existing accounts aren't locked out immediately
+  if (!userCols.includes('email_verified')) {
+    try { db.exec('ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 1') } catch { /* already exists */ }
+  }
 
   seedAdminUser(db)
   seedDemoUser(db)
