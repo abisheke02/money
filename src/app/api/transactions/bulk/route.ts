@@ -77,7 +77,7 @@ export async function PUT(request: Request) {
 
     const query = `UPDATE transactions SET ${setClauses.join(', ')} WHERE id IN (${ids.map(() => '?').join(',')})`
     
-    db.prepare(query).run(...params, ...ids)
+    db.run(query, [...params, ...ids])
 
     return NextResponse.json({ success: true, count: ids.length })
   } catch (error) {
