@@ -19,11 +19,11 @@ function maybeCleanup() {
   if (Date.now() - lastCleanup < 5 * 60_000) return
   lastCleanup = Date.now()
   const cutoff = Date.now() - 60_000
-  for (const [key, times] of hits) {
+  Array.from(hits.entries()).forEach(([key, times]) => {
     const fresh = times.filter(t => t > cutoff)
     if (fresh.length === 0) hits.delete(key)
     else hits.set(key, fresh)
-  }
+  })
 }
 
 export function middleware(request: NextRequest) {
