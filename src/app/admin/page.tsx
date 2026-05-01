@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Users, CreditCard, IndianRupee, Lightbulb, TrendingUp, Crown, Star, Circle, ArrowRight, ShieldCheck } from 'lucide-react'
+import { Users, CreditCard, IndianRupee, Lightbulb, TrendingUp, Crown, Star, Circle, ArrowRight, ShieldCheck, Plus } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import { cn } from '@/lib/utils/format'
