@@ -4,17 +4,17 @@ import db from '@/lib/db'
 export async function GET() {
   try {
     // 1. Get Grand Totals across ALL businesses
-    const grandTotals = db.get(`
-      SELECT 
+    const grandTotals = db.get<{ totalIncome: number; totalExpense: number; totalPending: number }>(`
+      SELECT
         COALESCE(SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END), 0) as totalIncome,
         COALESCE(SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END), 0) as totalExpense,
         COALESCE(SUM(CASE WHEN status = 'pending' AND type = 'credit' THEN amount WHEN status = 'pending' AND type = 'debit' THEN -amount ELSE 0 END), 0) as totalPending
       FROM transactions
     `)
 
-    const totalIncome = grandTotals?.totalIncome || 0
-    const totalExpense = grandTotals?.totalExpense || 0
-    const totalPending = grandTotals?.totalPending || 0
+    const totalIncome = grandTotals?.totalIncome ?? 0
+    const totalExpense = grandTotals?.totalExpense ?? 0
+    const totalPending = grandTotals?.totalPending ?? 0
     const netProfit = totalIncome - totalExpense
 
     // 2. Get breakdown per business
