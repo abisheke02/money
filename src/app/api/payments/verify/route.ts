@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { PrismaClient } from '@prisma/client'
+import db from '@/lib/db'
 import { sendPlanUpgradeEmail } from '@/lib/email/resend'
-
-const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,22 +26,19 @@ export async function POST(request: NextRequest) {
     // Payment genuine! Update user Subscription in DB
     const expiryDate = new Date()
     expiryDate.setMonth(expiryDate.getMonth() + 1) // Add 1 month
+    const expiryIso = expiryDate.toISOString()
 
-    const user = await prisma.user.findUnique({ where: { id: parseInt(userId) } })
+    const user = db.get<{ id: number, email: string }>('SELECT id, email FROM users WHERE id = ?', [parseInt(userId)])
 
     if (user) {
-      // Create or Update Subscription Model
-      await prisma.subscription.create({
-        data: {
-          userId: user.id,
-          plan: plan, // 'pro' | 'premium'
-          status: 'active',
-          expiresAt: expiryDate,
-          amountPaid: plan === 'premium' ? 499 : 199,
-          paymentMethod: 'razorpay',
-          notes: `Order ID: ${razorpay_order_id} | Payment ID: ${razorpay_payment_id}`
-        }
-      })
+      const amountPaid = plan === 'premium' ? 499 : 199
+      const notes = `Order ID: ${razorpay_order_id} | Payment ID: ${razorpay_payment_id}`
+      
+      // Update or create subscription
+      db.run(`
+        INSERT INTO subscriptions (user_id, plan, status, expires_at, amount_paid, payment_method, notes)
+        VALUES (?, ?, 'active', ?, ?, 'razorpay', ?)
+      `, [user.id, plan, expiryIso, amountPaid, notes])
 
       // Send the email receipt
       await sendPlanUpgradeEmail(user.email, plan, expiryDate)
@@ -53,7 +48,5 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Razorpay Verify Error:', error)
     return NextResponse.json({ error: 'Failed to verify payment' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }

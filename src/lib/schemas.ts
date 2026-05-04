@@ -1,7 +1,8 @@
 import { z } from 'zod'
 
 // Primitives
-export const isoDate     = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD')
+// Primitives
+export const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD').or(z.literal('')).transform(v => v === '' ? null : v)
 export const positiveNum = z.number().positive('Must be greater than 0')
 
 // Transactions
@@ -87,9 +88,19 @@ export const registerSchema    = RegisterSchema
 // Helpers
 export function parseBody<T>(
   schema: z.ZodSchema<T>,
-  body: unknown,
+  body: any,
 ): { data: T; error: null } | { data: null; error: Response } {
-  const result = schema.safeParse(body)
+  // Convert empty strings to null for optional/nullable fields before parsing
+  const processed = typeof body === 'object' && body !== null ? { ...body } : body
+  if (typeof processed === 'object' && processed !== null) {
+    for (const key in processed) {
+      if (processed[key] === '') {
+        processed[key] = null
+      }
+    }
+  }
+
+  const result = schema.safeParse(processed)
   if (!result.success) {
     return { data: null, error: Response.json({ error: 'Validation error', details: result.error.flatten() }, { status: 400 }) }
   }
@@ -100,9 +111,9 @@ export function parseQuery<T>(
   schema: z.ZodSchema<T>,
   searchParams: URLSearchParams,
 ): { data: T; error: null } | { data: null; error: Response } {
-  // Strip empty strings so params like `businessId=` don't coerce to 0 and fail `.positive()`
+  // Strip empty strings and literal 'undefined'/'null' strings
   const raw = Object.fromEntries(
-    Array.from(searchParams.entries()).filter(([, v]) => v !== '')
+    Array.from(searchParams.entries()).filter(([, v]) => v !== '' && v !== 'undefined' && v !== 'null')
   )
   const result = schema.safeParse(raw)
   if (!result.success) {

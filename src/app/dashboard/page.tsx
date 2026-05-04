@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { AlertCircle, Clock, ArrowRight, TrendingUp, TrendingDown, Wallet, Target, Search } from 'lucide-react'
+import { AlertCircle, Clock, ArrowRight, TrendingUp, TrendingDown, Wallet, Target, Search, Bell, X, Crown } from 'lucide-react'
 import Link from 'next/link'
 import { useBusiness } from '@/lib/contexts/BusinessContext'
 import { useCurrency } from '@/lib/contexts/CurrencyContext'
+import { usePlan, PLAN_LABELS } from '@/lib/contexts/PlanContext'
 import {
   PieChart, Pie, Cell,
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -16,6 +17,7 @@ import { cn } from '@/lib/utils/format'
 
 export default function DashboardPage() {
   const { activeBusiness, loading: businessLoading } = useBusiness()
+  const { plan, daysLeft } = usePlan()
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [categorySpend, setCategorySpend] = useState<CategorySpend[]>([])
   const [dailyCashflow, setDailyCashflow] = useState<DailyCashflow[]>([])
@@ -88,6 +90,28 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
+
+      {/* Plan expiry banner */}
+      {daysLeft !== null && daysLeft <= 7 && plan !== 'free' && (
+        <div className={cn(
+          "flex items-center justify-between gap-4 rounded-2xl px-5 py-3 text-sm font-semibold",
+          daysLeft <= 0
+            ? "bg-rose-500/10 border border-rose-500/20 text-rose-300"
+            : "bg-amber-500/10 border border-amber-500/20 text-amber-300"
+        )}>
+          <div className="flex items-center gap-2">
+            <Crown className="w-4 h-4 flex-shrink-0" />
+            {daysLeft <= 0
+              ? `Your ${PLAN_LABELS[plan].name} plan has expired.`
+              : `Your ${PLAN_LABELS[plan].name} plan expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}.`
+            }
+          </div>
+          <Link href="/dashboard/pricing" className="underline underline-offset-2 hover:opacity-80 whitespace-nowrap">
+            Renew Now
+          </Link>
+        </div>
+      )}
+
       {/* Header Panel */}
       <header className="flex flex-col gap-6 rounded-[32px] border border-white/10 bg-white/5 p-6 backdrop-blur-xl md:flex-row md:items-center md:justify-between shadow-2xl">
         <div>

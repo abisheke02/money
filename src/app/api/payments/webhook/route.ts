@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import db from '@/lib/db'
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,32 +28,21 @@ export async function POST(request: NextRequest) {
     // Handle the Razorpay Webhooks
     switch(event.event) {
       case 'payment.captured':
-        // A payment was successfully captured.
-        // We handle immediate upgrades in the /verify route, but you can add retry logic here.
         console.log('Webhook: Payment Captured ->', event.payload.payment.entity.id)
         break
       case 'subscription.activated':
-        // Wait for recurring subscription activations
         console.log('Webhook: Subscription Activated ->', event.payload.subscription.entity.id)
-        // Extract userId from notes
         const accUserId = event.payload.subscription.entity.notes?.userId
         if (accUserId) {
-           await prisma.subscription.updateMany({
-             where: { userId: parseInt(accUserId), status: 'pending' },
-             data: { status: 'active' }
-           })
+           db.run(`UPDATE subscriptions SET status = 'active', updated_at = datetime('now') WHERE user_id = ? AND status = 'pending'`, [parseInt(accUserId)])
         }
         break
       case 'subscription.cancelled':
       case 'payment.failed':
          console.warn('Webhook: Payment/Subscription Failed or Cancelled')
-         // Demote the user if subscription fails
          const failUserId = event.payload.subscription?.entity?.notes?.userId || event.payload.payment?.entity?.notes?.userId
          if (failUserId) {
-            await prisma.subscription.updateMany({
-               where: { userId: parseInt(failUserId) },
-               data: { status: 'cancelled' }
-            })
+            db.run(`UPDATE subscriptions SET status = 'cancelled', updated_at = datetime('now') WHERE user_id = ?`, [parseInt(failUserId)])
          }
          break
       default:
@@ -67,7 +54,5 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Webhook Error:', error)
     return NextResponse.json({ error: 'Webhook Handler Failed' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }

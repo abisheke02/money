@@ -55,14 +55,42 @@ export default function ReceivablesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const url = editingId ? `/api/transactions/${editingId}` : '/api/transactions'
-    await fetch(url, { method: editingId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, amount: parseFloat(form.amount), category_id: parseInt(form.category_id), business_id: activeBusiness?.id, currency: currentCurrency }) })
+    const payload = { 
+      ...form, 
+      amount: parseFloat(form.amount) || 0, 
+      category_id: form.category_id ? parseInt(form.category_id) : undefined, 
+      business_id: activeBusiness?.id, 
+      currency: currentCurrency,
+      due_date: form.due_date || null
+    }
+    await fetch(url, { 
+      method: editingId ? 'PUT' : 'POST', 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify(payload) 
+    })
     setShowModal(false); setEditingId(null); resetForm(); fetchData()
   }
 
   const markReceived = async (id: number) => {
     const rec = records.find(r => r.id === id)
     if (!rec) return
-    await fetch(`/api/transactions/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: rec.type, amount: rec.amount, category_id: (rec as any).category_id || 1, business_id: activeBusiness?.id, date: rec.date, status: 'received', client_name: rec.client_name, note: rec.note, method: rec.method, due_date: rec.due_date }) })
+    const payload = { 
+      type: rec.type, 
+      amount: rec.amount, 
+      category_id: (rec as any).category_id || (categories[0]?.id || 1), 
+      business_id: activeBusiness?.id, 
+      date: rec.date, 
+      status: 'received', 
+      client_name: rec.client_name, 
+      note: rec.note, 
+      method: rec.method, 
+      due_date: rec.due_date || null 
+    }
+    await fetch(`/api/transactions/${id}`, { 
+      method: 'PUT', 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify(payload) 
+    })
     fetchData()
   }
 

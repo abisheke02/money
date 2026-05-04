@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import db from '@/lib/db'
 
 export async function GET(request: Request) {
   try {
@@ -21,91 +19,46 @@ export async function GET(request: Request) {
     monthStart.setDate(1)
     const monthStartStr = monthStart.toISOString().split('T')[0]
 
-    // We can use aggregate or groupBy in Prisma, but for exact summary matching raw queries or separate aggregates 
-    // are often easiest. Let's use Prisma's aggregate features.
-    
-    // 1. Total Balance & Pending
-    const allCompleted = await prisma.transaction.groupBy({
-      by: ['type'],
-      where: { businessId, status: 'completed' },
-      _sum: { amount: true }
-    })
-    
-    let completedCredit = 0; let completedDebit = 0;
-    allCompleted.forEach(grp => {
-      if (grp.type === 'credit') completedCredit = grp._sum.amount ?? 0;
-      if (grp.type === 'debit')  completedDebit  = grp._sum.amount ?? 0;
-    })
-    const totalBalance = completedCredit - completedDebit;
+    const getAgg = (statusCondition: string, dateCondition: string, dateParam?: string) => {
+      const sql = `SELECT type, SUM(amount) as total FROM transactions WHERE business_id = ? ${statusCondition} ${dateCondition} GROUP BY type`
+      const params: any[] = [businessId]
+      if (dateParam) params.push(dateParam)
+      const rows = db.all<{type: string, total: number}>(sql, params)
+      let credit = 0; let debit = 0;
+      for (const r of rows) {
+        if (r.type === 'credit') credit = r.total || 0;
+        if (r.type === 'debit') debit = r.total || 0;
+      }
+      return { credit, debit }
+    }
 
-    const allPending = await prisma.transaction.groupBy({
-      by: ['type'],
-      where: { businessId, status: 'pending' },
-      _sum: { amount: true }
-    })
-    
-    let pendingAmount = 0;
-    allPending.forEach(grp => {
-      if (grp.type === 'credit') pendingAmount += (grp._sum.amount ?? 0);
-      if (grp.type === 'debit')  pendingAmount -= (grp._sum.amount ?? 0);
-    })
-    const totalPending = pendingAmount;
+    const completed = getAgg("AND status = 'completed'", "")
+    const totalBalance = completed.credit - completed.debit
 
-    // 2. Today Stats
-    const todayAgg = await prisma.transaction.groupBy({
-      by: ['type'],
-      where: { businessId, date: today },
-      _sum: { amount: true }
-    })
-    let todayCredit = 0; let todayDebit = 0;
-    todayAgg.forEach(grp => {
-      if (grp.type === 'credit') todayCredit = grp._sum.amount ?? 0;
-      if (grp.type === 'debit')  todayDebit  = grp._sum.amount ?? 0;
-    })
+    const pending = getAgg("AND status = 'pending'", "")
+    const totalPending = pending.credit - pending.debit
 
-    // 3. Weekly Stats
-    const weekAgg = await prisma.transaction.groupBy({
-      by: ['type'],
-      where: { businessId, date: { gte: weekStartStr } },
-      _sum: { amount: true }
-    })
-    let weekCredit = 0; let weekDebit = 0;
-    weekAgg.forEach(grp => {
-      if (grp.type === 'credit') weekCredit = grp._sum.amount ?? 0;
-      if (grp.type === 'debit')  weekDebit  = grp._sum.amount ?? 0;
-    })
-
-    // 4. Monthly Stats
-    const monthAgg = await prisma.transaction.groupBy({
-      by: ['type'],
-      where: { businessId, date: { gte: monthStartStr } },
-      _sum: { amount: true }
-    })
-    let monthCredit = 0; let monthDebit = 0;
-    monthAgg.forEach(grp => {
-      if (grp.type === 'credit') monthCredit = grp._sum.amount ?? 0;
-      if (grp.type === 'debit')  monthDebit  = grp._sum.amount ?? 0;
-    })
+    const todayStats = getAgg("", "AND date = ?", today)
+    const weekStats = getAgg("", "AND date >= ?", weekStartStr)
+    const monthStats = getAgg("", "AND date >= ?", monthStartStr)
 
     const summary = {
       totalBalance,
       totalPending,
-      todayCredit,
-      todayDebit,
-      todayNet: todayCredit - todayDebit,
-      weekCredit,
-      weekDebit,
-      weekNet: weekCredit - weekDebit,
-      monthCredit,
-      monthDebit,
-      monthNet: monthCredit - monthDebit,
+      todayCredit: todayStats.credit,
+      todayDebit: todayStats.debit,
+      todayNet: todayStats.credit - todayStats.debit,
+      weekCredit: weekStats.credit,
+      weekDebit: weekStats.debit,
+      weekNet: weekStats.credit - weekStats.debit,
+      monthCredit: monthStats.credit,
+      monthDebit: monthStats.debit,
+      monthNet: monthStats.credit - monthStats.debit,
     }
 
     return NextResponse.json(summary)
   } catch (error) {
     console.error('Dashboard summary error:', error)
     return NextResponse.json({ error: 'Failed to fetch dashboard data' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }

@@ -86,11 +86,12 @@ export default function TransactionsPage() {
       const url = editingId ? `/api/transactions/${editingId}` : '/api/transactions'
       const payload = { 
         ...form, 
-        amount: parseFloat(form.amount), 
-        category_id: parseInt(form.category_id), 
+        amount: parseFloat(form.amount) || 0, 
+        category_id: form.category_id ? parseInt(form.category_id) : undefined, 
         business_id: activeBusiness?.id, 
         currency: currentCurrency, 
-        reminder_days: parseInt(form.reminder_days) || 3 
+        reminder_days: parseInt(form.reminder_days) || 3,
+        due_date: form.due_date || null
       }
       const res = await fetch(url, { 
         method: editingId ? 'PUT' : 'POST', 

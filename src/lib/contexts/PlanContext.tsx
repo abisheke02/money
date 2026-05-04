@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, ReactNode } from 'react'
+import { createContext, useContext, useEffect, ReactNode } from 'react'
 import { useLocalStorage } from '@/lib/hooks/useLocalStorage'
 
 export type Plan = 'free' | 'pro' | 'premium'
@@ -31,12 +31,16 @@ export const PLAN_LABELS: Record<Plan, { name: string; price: string; color: str
 interface PlanContextType {
   plan: Plan
   features: PlanFeatures
+  expiresAt: string | null
+  daysLeft: number | null
   setPlan: (p: Plan) => void
   can: (feature: keyof PlanFeatures) => boolean
+  refresh: () => void
 }
 
 const PlanContext = createContext<PlanContextType>({
-  plan: 'free', features: PLAN_FEATURES.free, setPlan: () => {}, can: () => false,
+  plan: 'free', features: PLAN_FEATURES.free, expiresAt: null, daysLeft: null,
+  setPlan: () => {}, can: () => false, refresh: () => {},
 })
 
 function isValidPlan(v: unknown): v is Plan {
@@ -45,14 +49,34 @@ function isValidPlan(v: unknown): v is Plan {
 
 export function PlanProvider({ children }: { children: ReactNode }) {
   const [plan, setPlanStored] = useLocalStorage<Plan>('moneyflow_plan', 'free')
+  const [expiresAt, setExpiresAt] = useLocalStorage<string | null>('moneyflow_plan_expires', null)
+  const [daysLeft, setDaysLeft] = useLocalStorage<number | null>('moneyflow_plan_days', null)
+
   const validPlan: Plan = isValidPlan(plan) ? plan : 'free'
+
+  const fetchPlan = async () => {
+    try {
+      const token = localStorage.getItem('moneyflow_session_token')
+      if (!token) return
+      const res = await fetch('/api/user/plan', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      if (isValidPlan(data.plan)) setPlanStored(data.plan)
+      setExpiresAt(data.expires_at ?? null)
+      setDaysLeft(data.days_left ?? null)
+    } catch { /* silent */ }
+  }
+
+  useEffect(() => { fetchPlan() }, [])
 
   const setPlan = (p: Plan) => setPlanStored(p)
   const features = PLAN_FEATURES[validPlan]
   const can = (feature: keyof PlanFeatures) => !!features[feature]
 
   return (
-    <PlanContext.Provider value={{ plan: validPlan, features, setPlan, can }}>
+    <PlanContext.Provider value={{ plan: validPlan, features, expiresAt, daysLeft, setPlan, can, refresh: fetchPlan }}>
       {children}
     </PlanContext.Provider>
   )
