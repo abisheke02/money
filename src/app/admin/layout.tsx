@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
-  LayoutDashboard, Users, CreditCard, Lightbulb, LogOut, Shield, Menu, X, ArrowLeft, Plus
+  LayoutDashboard, Users, CreditCard, Lightbulb, LogOut, Shield, Menu, X, ArrowLeft, Plus, Megaphone
 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import { cn } from '@/lib/utils/format'
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/admin/users',         icon: Users,           label: 'Users' },
   { href: '/admin/subscriptions', icon: CreditCard,      label: 'Subscriptions' },
   { href: '/admin/features',      icon: Lightbulb,       label: 'Feature Tracker' },
+  { href: '/admin/broadcast',     icon: Megaphone,       label: 'Broadcast' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -136,13 +136,13 @@ export default function DashboardPage() {
       </header>
 
       {/* Summary Row */}
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
         {summaryCards.map((card) => (
           <div key={card.title} className={cn("rounded-[32px] border p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl bg-gradient-to-br", card.border, card.bg)}>
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{card.title}</p>
-                <h3 className="mt-4 text-2xl md:text-3xl font-black text-white font-mono tabular-nums">{card.value}</h3>
+                <h3 className="mt-4 text-xl sm:text-2xl md:text-3xl font-black text-white font-mono tabular-nums">{card.value}</h3>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/5 shadow-inner">
                 <card.icon className={cn("w-6 h-6", card.color)} />
@@ -161,7 +161,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Main Analytics Section */}
-      <section className="grid gap-6 xl:grid-cols-3">
+      <section className="grid gap-6 grid-cols-1 xl:grid-cols-3">
         {/* Cash Flow Chart */}
         <div className="xl:col-span-2 rounded-[32px] border border-white/5 bg-white/5 p-8 backdrop-blur-xl shadow-2xl flex flex-col">
           <div className="mb-8 flex items-center justify-between">

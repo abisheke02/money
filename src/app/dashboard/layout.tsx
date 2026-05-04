@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   LayoutDashboard, Receipt, Tags, Settings, LogOut, Menu, X,
   Bell, Globe, Calculator, ClipboardList, Sparkles, Lock, CreditCard,
-  Crown, AlertTriangle, Info,
+  Crown, AlertTriangle, Info, HelpCircle,
 } from 'lucide-react'
 import { BusinessProvider } from '@/lib/contexts/BusinessContext'
 import { CurrencyProvider } from '@/lib/contexts/CurrencyContext'
@@ -25,6 +25,7 @@ const navItems = [
   { href: '/dashboard/calculator',    icon: Calculator,      label: 'Calculator',   gate: null },
   { href: '/dashboard/settings',      icon: Settings,        label: 'Settings',     gate: null },
   { href: '/dashboard/pricing',       icon: CreditCard,      label: 'Plans',        gate: null },
+  { href: '/dashboard/help',          icon: HelpCircle,      label: 'Help',         gate: null },
 ]
 
 function SidebarContent({ onClose }: { onClose: () => void }) {
