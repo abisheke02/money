@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
   LayoutDashboard, Receipt, Tags, Settings, LogOut, Menu, X,
   Bell, Globe, Calculator, ClipboardList, Sparkles, Lock, CreditCard,
+  Crown, AlertTriangle, Info,
 } from 'lucide-react'
 import { BusinessProvider } from '@/lib/contexts/BusinessContext'
 import { CurrencyProvider } from '@/lib/contexts/CurrencyContext'
@@ -80,6 +81,70 @@ function SidebarContent({ onClose }: { onClose: () => void }) {
   )
 }
 
+type Notification = { id: string; type: string; message: string; created_at: string }
+
+function NotificationBell() {
+  const [open, setOpen] = useState(false)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const token = localStorage.getItem('moneyflow_session_token')
+    if (!token) return
+    fetch('/api/user/notifications', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(d => setNotifications(d.notifications ?? [])).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const iconFor = (type: string) => {
+    if (type === 'error')   return <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+    if (type === 'warning') return <Crown className="w-4 h-4 text-amber-400 flex-shrink-0" />
+    return <Info className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <button onClick={() => setOpen(v => !v)} className="relative p-3 rounded-2xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all shadow-inner">
+        <Bell className="w-5 h-5" />
+        {notifications.length > 0 && (
+          <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-slate-950 animate-pulse" />
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-14 w-80 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+            <p className="text-xs font-black text-white uppercase tracking-widest">Notifications</p>
+            <button onClick={() => setOpen(false)}><X className="w-4 h-4 text-slate-500 hover:text-white" /></button>
+          </div>
+          {notifications.length === 0 ? (
+            <div className="px-4 py-6 text-center text-xs text-slate-500">All clear — no alerts</div>
+          ) : (
+            <div className="divide-y divide-white/5 max-h-72 overflow-y-auto">
+              {notifications.map(n => (
+                <div key={n.id} className="flex items-start gap-3 px-4 py-3 hover:bg-white/5 transition">
+                  {iconFor(n.type)}
+                  <p className="text-xs text-slate-300 leading-relaxed">{n.message}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="px-4 py-2 border-t border-white/5">
+            <Link href="/dashboard/pricing" onClick={() => setOpen(false)} className="text-[10px] text-emerald-400 hover:text-emerald-300 font-bold uppercase tracking-widest">
+              Manage Plan →
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function LayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -90,9 +155,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
     if (!localStorage.getItem('moneyflow_auth')) router.push('/')
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if user is typing in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return
-
       if (e.key.toLowerCase() === 'a') {
         e.preventDefault()
         router.push('/dashboard/transactions?action=add')
@@ -100,13 +163,8 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
       if (e.key === '/') {
         e.preventDefault()
         const searchInput = document.getElementById('search-input')
-        if (searchInput) {
-          searchInput.focus()
-        } else {
-          router.push('/dashboard/transactions')
-          // Small delay to allow navigation and mounting
-          setTimeout(() => document.getElementById('search-input')?.focus(), 100)
-        }
+        if (searchInput) searchInput.focus()
+        else { router.push('/dashboard/transactions'); setTimeout(() => document.getElementById('search-input')?.focus(), 100) }
       }
     }
 
@@ -114,7 +172,14 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [router])
 
-  const handleLogout = () => { localStorage.removeItem('moneyflow_auth'); router.push('/') }
+  const handleLogout = () => {
+    localStorage.removeItem('moneyflow_auth')
+    localStorage.removeItem('moneyflow_session_token')
+    localStorage.removeItem('moneyflow_plan')
+    localStorage.removeItem('moneyflow_plan_expires')
+    localStorage.removeItem('moneyflow_plan_days')
+    router.push('/')
+  }
 
   if (!mounted) return null
 
@@ -169,10 +234,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
               </div>
               <div className="flex items-center gap-4">
                 <ThemeToggle />
-                <button className="relative p-3 rounded-2xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all shadow-inner">
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-slate-950 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                </button>
+                <NotificationBell />
                 <div className="flex items-center gap-3 pl-2 border-l border-white/10">
                    <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-500 p-[2px] shadow-lg shadow-emerald-500/20">
                     <div className="h-full w-full rounded-[14px] bg-slate-950 flex items-center justify-center font-black text-xs text-white">AD</div>

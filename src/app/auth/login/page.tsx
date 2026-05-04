@@ -42,6 +42,7 @@ function LoginContent() {
       if (res.ok) {
         localStorage.setItem('moneyflow_auth', 'logged_in')
         if (data.sessionToken) localStorage.setItem('moneyflow_session_token', data.sessionToken)
+        if (data.userId) localStorage.setItem('moneyflow_user_id', String(data.userId))
         router.push('/dashboard')
       } else if (data.code === 'EMAIL_NOT_VERIFIED') {
         setError(data.error)

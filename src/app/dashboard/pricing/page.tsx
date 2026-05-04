@@ -1,7 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { usePlan, PLAN_FEATURES, PLAN_LABELS, Plan } from '@/lib/contexts/PlanContext'
-import { Check, X, Zap, Crown, Sparkles } from 'lucide-react'
+import { Check, X, Zap, Crown, Sparkles, CheckCircle } from 'lucide-react'
+import UpgradeModal from '@/components/payments/UpgradeModal'
 
 const plans: { key: Plan; icon: any; features: string[]; locked: string[] }[] = [
   {
@@ -25,14 +27,46 @@ const plans: { key: Plan; icon: any; features: string[]; locked: string[] }[] = 
 ]
 
 export default function PricingPage() {
-  const { plan: currentPlan, setPlan } = usePlan()
+  const { plan: currentPlan, setPlan, refresh } = usePlan()
+  const [showUpgrade, setShowUpgrade] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<'pro' | 'premium'>('pro')
+  const [successPlan, setSuccessPlan] = useState<string | null>(null)
+
+  const userId = typeof window !== 'undefined'
+    ? (localStorage.getItem('moneyflow_user_id') ?? '1')
+    : '1'
 
   const handleActivate = (p: Plan) => {
-    setPlan(p)
+    if (p === 'free') { setPlan('free'); return }
+    setSelectedPlan(p as 'pro' | 'premium')
+    setShowUpgrade(true)
+  }
+
+  const handlePaymentSuccess = async (plan: string) => {
+    setPlan(plan as Plan)
+    await refresh()
+    setSuccessPlan(plan)
+    setShowUpgrade(false)
+    setTimeout(() => setSuccessPlan(null), 4000)
   }
 
   return (
     <div className="space-y-3">
+      {successPlan && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm font-semibold">
+          <CheckCircle className="w-5 h-5 flex-shrink-0" />
+          Payment successful! You are now on the {successPlan.toUpperCase()} plan.
+        </div>
+      )}
+
+      {showUpgrade && (
+        <UpgradeModal
+          userId={userId}
+          onClose={() => setShowUpgrade(false)}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
+
       <div>
         <h1 className="text-base font-bold text-white">Plans & Pricing</h1>
         <p className="text-[10px] text-slate-400">Choose the plan that fits your needs</p>
