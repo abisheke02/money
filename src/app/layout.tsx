@@ -7,6 +7,18 @@ import { GlobalErrorToast } from '@/app/components/GlobalErrorToast'
 export const metadata: Metadata = {
   title: 'MoneyFlow - Personal Finance Manager',
   description: 'Track your credits and debits with ease',
+  manifest: '/manifest.json',
+  themeColor: '#10b981',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'MoneyFlow',
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -64,9 +64,23 @@ export default function HelpPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
-    await new Promise(r => setTimeout(r, 1000))
-    setSubmitted(true)
-    setSubmitting(false)
+    try {
+      const token = localStorage.getItem('moneyflow_session_token')
+      const res = await fetch('/api/support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(ticket),
+      })
+      if (!res.ok) throw new Error('Failed')
+      setSubmitted(true)
+    } catch {
+      alert('Failed to send. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
