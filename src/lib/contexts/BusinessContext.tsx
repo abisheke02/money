@@ -22,7 +22,10 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
 
   const refreshBusinesses = useCallback(async () => {
     try {
-      const res = await fetch('/api/businesses')
+      const token = localStorage.getItem('monvio_session_token') ?? ''
+      const res = await fetch('/api/businesses', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
       if (!res.ok) throw new Error('Failed to fetch businesses')
       const data: Business[] = await res.json()
       if (!Array.isArray(data)) throw new Error('Invalid businesses data')

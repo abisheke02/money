@@ -25,9 +25,13 @@ export default function OnboardingPage() {
     if (!businessName.trim()) { setError('Please enter a business name'); return }
     setLoading(true)
     try {
+      const token = localStorage.getItem('monvio_session_token') ?? ''
       const res = await fetch('/api/businesses', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ name: businessName.trim() }),
       })
       if (!res.ok) throw new Error('Failed to create business')
