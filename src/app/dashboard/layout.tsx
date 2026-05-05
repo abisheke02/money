@@ -150,10 +150,20 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [username, setUsername] = useState('')
 
   useEffect(() => {
     setMounted(true)
     if (!localStorage.getItem('monvio_auth')) router.push('/')
+
+    // Load username from session
+    const token = localStorage.getItem('monvio_session_token')
+    if (token) {
+      fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d?.username) setUsername(d.username) })
+        .catch(() => {})
+    }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return
@@ -238,11 +248,13 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
                 <NotificationBell />
                 <div className="flex items-center gap-3 pl-2 border-l border-white/10">
                    <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-500 p-[2px] shadow-lg shadow-emerald-500/20">
-                    <div className="h-full w-full rounded-[14px] bg-slate-950 flex items-center justify-center font-black text-xs text-white">AD</div>
+                    <div className="h-full w-full rounded-[14px] bg-slate-950 flex items-center justify-center font-black text-xs text-white">
+                      {username ? username.slice(0, 2).toUpperCase() : '??'}
+                    </div>
                    </div>
                    <div className="hidden xl:block">
-                      <p className="text-xs font-black text-white">Abhishek E</p>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Admin Account</p>
+                      <p className="text-xs font-black text-white capitalize">{username || 'Loading...'}</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Monvio Account</p>
                    </div>
                 </div>
               </div>
