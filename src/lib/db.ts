@@ -6,7 +6,11 @@ let dbInstance: Database.Database | null = null
 
 function getDatabase(): Database.Database {
   if (!dbInstance) {
-    const dbPath = path.join(process.cwd(), 'monvio.db')
+    // Support both old (moneyflow.db) and new (monvio.db) filenames
+    // Use moneyflow.db if it exists and monvio.db doesn't (migration safety)
+    const newPath = path.join(process.cwd(), 'monvio.db')
+    const oldPath = path.join(process.cwd(), 'moneyflow.db')
+    const dbPath = (!fs.existsSync(newPath) && fs.existsSync(oldPath)) ? oldPath : newPath
     dbInstance = new Database(dbPath)
     dbInstance.pragma('journal_mode = WAL')
     dbInstance.pragma('foreign_keys = ON')
