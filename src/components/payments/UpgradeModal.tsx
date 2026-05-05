@@ -45,7 +45,7 @@ export default function UpgradeModal({
         key: data.keyId,
         amount: data.amount,
         currency: data.currency,
-        name: 'MoneyFlow Ecosystem',
+        name: 'Monvio Ecosystem',
         description: `Upgrade to ${plan.toUpperCase()}`,
         order_id: data.orderId,
         handler: async function (response: any) {

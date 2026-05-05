@@ -40,9 +40,9 @@ function LoginContent() {
       const data = await res.json()
 
       if (res.ok) {
-        localStorage.setItem('moneyflow_auth', 'logged_in')
-        if (data.sessionToken) localStorage.setItem('moneyflow_session_token', data.sessionToken)
-        if (data.userId) localStorage.setItem('moneyflow_user_id', String(data.userId))
+        localStorage.setItem('monvio_auth', 'logged_in')
+        if (data.sessionToken) localStorage.setItem('monvio_session_token', data.sessionToken)
+        if (data.userId) localStorage.setItem('monvio_user_id', String(data.userId))
         router.push('/dashboard')
       } else if (data.code === 'EMAIL_NOT_VERIFIED') {
         setError(data.error)
@@ -188,7 +188,7 @@ function LoginContent() {
 
           <div className="text-center pt-2">
             <p className="text-xs text-slate-500 font-medium">
-              New to MoneyFlow?{' '}
+              New to Monvio?{' '}
               <Link href="/auth/register" className="text-emerald-400 hover:text-emerald-300 font-black transition-colors">
                 Create Identity
               </Link>

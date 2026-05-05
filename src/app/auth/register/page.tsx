@@ -62,7 +62,7 @@ export default function Register() {
             </div>
             <h2 className="text-2xl font-black text-white mb-2">Account Created!</h2>
             <p className="text-slate-400 mb-6">
-              Welcome to MoneyFlow. Please check your inbox for a verification email before logging in.
+              Welcome to Monvio. Please check your inbox for a verification email before logging in.
             </p>
             <Link 
               href="/auth/login"
@@ -75,7 +75,7 @@ export default function Register() {
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 lg:p-10 shadow-2xl">
             <div className="mb-8">
               <h1 className="text-3xl font-black text-white mb-2">Create Identity</h1>
-              <p className="text-slate-400">Join MoneyFlow and conquer your finances.</p>
+              <p className="text-slate-400">Join Monvio and conquer your finances.</p>
             </div>
 
             {error && (

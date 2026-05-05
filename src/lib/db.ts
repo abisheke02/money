@@ -6,7 +6,7 @@ let dbInstance: Database.Database | null = null
 
 function getDatabase(): Database.Database {
   if (!dbInstance) {
-    const dbPath = path.join(process.cwd(), 'moneyflow.db')
+    const dbPath = path.join(process.cwd(), 'monvio.db')
     dbInstance = new Database(dbPath)
     dbInstance.pragma('journal_mode = WAL')
     dbInstance.pragma('foreign_keys = ON')
@@ -90,7 +90,7 @@ function seedAdminUser(db: Database.Database): void {
     if (existing) return
     const password = Buffer.from('admin123').toString('base64')
     db.prepare(
-      "INSERT OR IGNORE INTO users (username, email, password, role) VALUES ('admin', 'admin@moneyflow.app', ?, 'admin')"
+      "INSERT OR IGNORE INTO users (username, email, password, role) VALUES ('admin', 'admin@monvio.app', ?, 'admin')"
     ).run(password)
     console.log('[db] Admin user seeded — login: admin / admin123')
   } catch (err) {
@@ -104,7 +104,7 @@ function seedDemoUser(db: Database.Database): void {
     if (existing) return
     const password = Buffer.from('demo').toString('base64')
     db.prepare(
-      "INSERT OR IGNORE INTO users (username, email, password, role) VALUES ('demo', 'demo@moneyflow.app', ?, 'user')"
+      "INSERT OR IGNORE INTO users (username, email, password, role) VALUES ('demo', 'demo@monvio.app', ?, 'user')"
     ).run(password)
     console.log('[db] Demo user seeded — login: demo / demo')
   } catch (err) {

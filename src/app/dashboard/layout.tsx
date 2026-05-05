@@ -90,7 +90,7 @@ function NotificationBell() {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const token = localStorage.getItem('moneyflow_session_token')
+    const token = localStorage.getItem('monvio_session_token')
     if (!token) return
     fetch('/api/user/notifications', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(d => setNotifications(d.notifications ?? [])).catch(() => {})
@@ -153,7 +153,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true)
-    if (!localStorage.getItem('moneyflow_auth')) router.push('/')
+    if (!localStorage.getItem('monvio_auth')) router.push('/')
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return
@@ -174,11 +174,11 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
   }, [router])
 
   const handleLogout = () => {
-    localStorage.removeItem('moneyflow_auth')
-    localStorage.removeItem('moneyflow_session_token')
-    localStorage.removeItem('moneyflow_plan')
-    localStorage.removeItem('moneyflow_plan_expires')
-    localStorage.removeItem('moneyflow_plan_days')
+    localStorage.removeItem('monvio_auth')
+    localStorage.removeItem('monvio_session_token')
+    localStorage.removeItem('monvio_plan')
+    localStorage.removeItem('monvio_plan_expires')
+    localStorage.removeItem('monvio_plan_days')
     router.push('/')
   }
 
@@ -198,7 +198,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
               <Link href="/dashboard" className="flex items-center gap-2 group">
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 text-sm font-bold text-slate-950 shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-transform flex-shrink-0">₹</div>
                 <div>
-                  <h1 className="text-sm font-bold leading-tight">Money Flow</h1>
+                  <h1 className="text-sm font-bold leading-tight">Monvio</h1>
                   <p className="text-[10px] text-slate-400 leading-tight">Finance Dashboard</p>
                 </div>
               </Link>

@@ -8,7 +8,7 @@ export type SessionData = {
 
 export const sessionOptions = {
   password: process.env.SECRET_COOKIE_PASSWORD || 'complex_password_at_least_32_characters_long_for_security',
-  cookieName: 'moneyflow_iron_session',
+  cookieName: 'monvio_iron_session',
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',
   },

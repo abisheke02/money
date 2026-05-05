@@ -25,7 +25,7 @@ export default function AdminLoginPage() {
       })
       const data = await res.json()
       if (res.ok) {
-        localStorage.setItem('moneyflow_admin_auth', JSON.stringify({
+        localStorage.setItem('monvio_admin_auth', JSON.stringify({
           token: data.sessionToken,
           userId: data.userId,
           username: data.username,
@@ -57,7 +57,7 @@ export default function AdminLoginPage() {
              <Shield className="w-10 h-10" />
           </div>
           <h1 className="text-4xl font-black text-white tracking-tight">Admin OS</h1>
-          <p className="mt-2 text-slate-400 font-medium text-sm">MoneyFlow — Restricted Internal Access</p>
+          <p className="mt-2 text-slate-400 font-medium text-sm">Monvio — Restricted Internal Access</p>
         </div>
 
         <div className="rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-2xl p-8 shadow-2xl space-y-8">

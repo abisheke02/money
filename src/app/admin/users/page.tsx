@@ -39,7 +39,7 @@ export default function AdminUsersPage() {
   const [saving, setSaving] = useState(false)
 
   const getToken = () => {
-    try { return JSON.parse(localStorage.getItem('moneyflow_admin_auth') ?? '{}').token ?? '' } catch { return '' }
+    try { return JSON.parse(localStorage.getItem('monvio_admin_auth') ?? '{}').token ?? '' } catch { return '' }
   }
 
   const load = useCallback(async () => {
