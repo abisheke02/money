@@ -42,7 +42,7 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const raw = localStorage.getItem('monvio_admin_auth')
+    const raw = localStorage.getItem('moneylix_admin_auth')
     if (!raw) return
     const { token } = JSON.parse(raw)
     fetch('/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } })

@@ -90,7 +90,7 @@ function NotificationBell() {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const token = localStorage.getItem('monvio_session_token')
+    const token = localStorage.getItem('moneylix_session_token')
     if (!token) return
     fetch('/api/user/notifications', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(d => setNotifications(d.notifications ?? [])).catch(() => {})
@@ -154,10 +154,10 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true)
-    if (!localStorage.getItem('monvio_auth')) router.push('/')
+    if (!localStorage.getItem('moneylix_auth')) router.push('/')
 
     // Load username from session
-    const token = localStorage.getItem('monvio_session_token')
+    const token = localStorage.getItem('moneylix_session_token')
     if (token) {
       fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
         .then(r => r.ok ? r.json() : null)
@@ -184,11 +184,11 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
   }, [router])
 
   const handleLogout = () => {
-    localStorage.removeItem('monvio_auth')
-    localStorage.removeItem('monvio_session_token')
-    localStorage.removeItem('monvio_plan')
-    localStorage.removeItem('monvio_plan_expires')
-    localStorage.removeItem('monvio_plan_days')
+    localStorage.removeItem('moneylix_auth')
+    localStorage.removeItem('moneylix_session_token')
+    localStorage.removeItem('moneylix_plan')
+    localStorage.removeItem('moneylix_plan_expires')
+    localStorage.removeItem('moneylix_plan_days')
     router.push('/')
   }
 
@@ -208,7 +208,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
               <Link href="/dashboard" className="flex items-center gap-2 group">
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 text-sm font-bold text-slate-950 shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-transform flex-shrink-0">₹</div>
                 <div>
-                  <h1 className="text-sm font-bold leading-tight">Monvio</h1>
+                  <h1 className="text-sm font-bold leading-tight">Moneylix</h1>
                   <p className="text-[10px] text-slate-400 leading-tight">Finance Dashboard</p>
                 </div>
               </Link>
@@ -254,7 +254,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
                    </div>
                    <div className="hidden xl:block">
                       <p className="text-xs font-black text-white capitalize">{username || 'Loading...'}</p>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Monvio Account</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Moneylix Account</p>
                    </div>
                 </div>
               </div>

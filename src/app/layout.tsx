@@ -5,14 +5,14 @@ import { ThemeProvider } from '@/lib/contexts/ThemeContext'
 import { GlobalErrorToast } from '@/app/components/GlobalErrorToast'
 
 export const metadata: Metadata = {
-  title: 'Monvio - Personal Finance Manager',
+  title: 'Moneylix - Personal Finance Manager',
   description: 'Track your credits and debits with ease',
   manifest: '/manifest.json',
   themeColor: '#10b981',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Monvio',
+    title: 'Moneylix',
   },
   viewport: {
     width: 'device-width',

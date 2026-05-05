@@ -65,7 +65,7 @@ export default function HelpPage() {
     e.preventDefault()
     setSubmitting(true)
     try {
-      const token = localStorage.getItem('monvio_session_token')
+      const token = localStorage.getItem('moneylix_session_token')
       const res = await fetch('/api/support', {
         method: 'POST',
         headers: {
@@ -208,7 +208,7 @@ export default function HelpPage() {
         <Mail className="w-5 h-5 text-slate-400 flex-shrink-0" />
         <div>
           <p className="text-xs font-bold text-white">Email Support</p>
-          <p className="text-[10px] text-slate-500">support@monvio.app — Mon to Sat, 9am to 6pm IST</p>
+          <p className="text-[10px] text-slate-500">support@moneylix.app — Mon to Sat, 9am to 6pm IST</p>
         </div>
       </div>
     </div>

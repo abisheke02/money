@@ -22,7 +22,7 @@ export default function BroadcastPage() {
     setSending(true)
     setError('')
     try {
-      const auth = JSON.parse(localStorage.getItem('monvio_admin_auth') ?? '{}')
+      const auth = JSON.parse(localStorage.getItem('moneylix_admin_auth') ?? '{}')
       const res = await fetch('/api/admin/broadcast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },

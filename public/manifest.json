@@ -1,6 +1,6 @@
 {
-  "name": "Monvio - Finance Manager",
-  "short_name": "Monvio",
+  "name": "Moneylix - Finance Manager",
+  "short_name": "Moneylix",
   "description": "Track your income and expenses with ease",
   "start_url": "/dashboard",
   "display": "standalone",

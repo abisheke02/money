@@ -6,9 +6,9 @@ let dbInstance: Database.Database | null = null
 
 function getDatabase(): Database.Database {
   if (!dbInstance) {
-    // Support both old (moneyflow.db) and new (monvio.db) filenames
-    // Use moneyflow.db if it exists and monvio.db doesn't (migration safety)
-    const newPath = path.join(process.cwd(), 'monvio.db')
+    // Support both old (moneyflow.db) and new (moneylix.db) filenames
+    // Use moneyflow.db if it exists and moneylix.db doesn't (migration safety)
+    const newPath = path.join(process.cwd(), 'moneylix.db')
     const oldPath = path.join(process.cwd(), 'moneyflow.db')
     const dbPath = (!fs.existsSync(newPath) && fs.existsSync(oldPath)) ? oldPath : newPath
     dbInstance = new Database(dbPath)
@@ -94,7 +94,7 @@ function seedAdminUser(db: Database.Database): void {
     if (existing) return
     const password = Buffer.from('admin123').toString('base64')
     db.prepare(
-      "INSERT OR IGNORE INTO users (username, email, password, role) VALUES ('admin', 'admin@monvio.app', ?, 'admin')"
+      "INSERT OR IGNORE INTO users (username, email, password, role) VALUES ('admin', 'admin@moneylix.app', ?, 'admin')"
     ).run(password)
     console.log('[db] Admin user seeded — login: admin / admin123')
   } catch (err) {
@@ -108,7 +108,7 @@ function seedDemoUser(db: Database.Database): void {
     if (existing) return
     const password = Buffer.from('demo').toString('base64')
     db.prepare(
-      "INSERT OR IGNORE INTO users (username, email, password, role) VALUES ('demo', 'demo@monvio.app', ?, 'user')"
+      "INSERT OR IGNORE INTO users (username, email, password, role) VALUES ('demo', 'demo@moneylix.app', ?, 'user')"
     ).run(password)
     console.log('[db] Demo user seeded — login: demo / demo')
   } catch (err) {

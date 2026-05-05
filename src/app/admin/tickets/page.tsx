@@ -28,7 +28,7 @@ export default function TicketsPage() {
   const [sending, setSending] = useState(false)
 
   const getAuth = () => {
-    try { return JSON.parse(localStorage.getItem('monvio_admin_auth') ?? '{}') } catch { return {} }
+    try { return JSON.parse(localStorage.getItem('moneylix_admin_auth') ?? '{}') } catch { return {} }
   }
 
   const fetchTickets = async () => {

@@ -48,15 +48,15 @@ function isValidPlan(v: unknown): v is Plan {
 }
 
 export function PlanProvider({ children }: { children: ReactNode }) {
-  const [plan, setPlanStored] = useLocalStorage<Plan>('monvio_plan', 'free')
-  const [expiresAt, setExpiresAt] = useLocalStorage<string | null>('monvio_plan_expires', null)
-  const [daysLeft, setDaysLeft] = useLocalStorage<number | null>('monvio_plan_days', null)
+  const [plan, setPlanStored] = useLocalStorage<Plan>('moneylix_plan', 'free')
+  const [expiresAt, setExpiresAt] = useLocalStorage<string | null>('moneylix_plan_expires', null)
+  const [daysLeft, setDaysLeft] = useLocalStorage<number | null>('moneylix_plan_days', null)
 
   const validPlan: Plan = isValidPlan(plan) ? plan : 'free'
 
   const fetchPlan = async () => {
     try {
-      const token = localStorage.getItem('monvio_session_token')
+      const token = localStorage.getItem('moneylix_session_token')
       if (!token) return
       const res = await fetch('/api/user/plan', {
         headers: { Authorization: `Bearer ${token}` },

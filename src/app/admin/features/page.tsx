@@ -43,7 +43,7 @@ export default function AdminFeaturesPage() {
   const [filterStatus, setFilterStatus] = useState('')
 
   const getToken = () => {
-    try { return JSON.parse(localStorage.getItem('monvio_admin_auth') ?? '{}').token ?? '' } catch { return '' }
+    try { return JSON.parse(localStorage.getItem('moneylix_admin_auth') ?? '{}').token ?? '' } catch { return '' }
   }
 
   const load = useCallback(async () => {

@@ -4,7 +4,7 @@ const resendApiKey = process.env.RESEND_API_KEY || 're_dummy_123'
 export const resend = new Resend(resendApiKey)
 
 // You must verify this domain in Resend for emails to hit inboxes
-const FROM_EMAIL = 'Monvio <no-reply@monvio.app>'
+const FROM_EMAIL = 'Moneylix <no-reply@moneylix.app>'
 
 export async function sendVerificationEmail(to: string, token: string, name: string) {
   const verifyLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${token}`
@@ -12,10 +12,10 @@ export async function sendVerificationEmail(to: string, token: string, name: str
   return resend.emails.send({
     from: FROM_EMAIL,
     to,
-    subject: 'Confirm your Monvio Account',
+    subject: 'Confirm your Moneylix Account',
     html: `
       <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0f172a; color: #ffffff; padding: 40px; border-radius: 16px; border: 1px solid #334155;">
-        <h1 style="color: #38bdf8; margin-bottom: 24px;">Welcome to Monvio, ${name}!</h1>
+        <h1 style="color: #38bdf8; margin-bottom: 24px;">Welcome to Moneylix, ${name}!</h1>
         <p style="font-size: 16px; line-height: 1.5; color: #cbd5e1; margin-bottom: 32px;">
           You're one step away from taking full control of your finances. Please verify your email address to activate your dashboard.
         </p>
@@ -35,7 +35,7 @@ export async function sendWelcomeEmail(to: string, name: string) {
   return resend.emails.send({
     from: FROM_EMAIL,
     to,
-    subject: 'Welcome to the Monvio Ecosystem 🚀',
+    subject: 'Welcome to the Moneylix Ecosystem 🚀',
     html: `
       <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0f172a; color: #ffffff; padding: 40px; border-radius: 16px; border: 1px solid #334155;">
         <h1 style="color: #10b981; margin-bottom: 24px;">Verification Complete!</h1>
@@ -53,7 +53,7 @@ export async function sendPasswordResetEmail(to: string, token: string) {
   return resend.emails.send({
     from: FROM_EMAIL,
     to,
-    subject: 'Reset your Monvio Password',
+    subject: 'Reset your Moneylix Password',
     html: `
       <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0f172a; color: #ffffff; padding: 40px; border-radius: 16px; border: 1px solid #334155;">
         <h1 style="color: #f59e0b; margin-bottom: 24px;">Password Reset Request</h1>
@@ -77,7 +77,7 @@ export async function sendPlanUpgradeEmail(to: string, plan: string, expiry: Dat
       <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0f172a; color: #ffffff; padding: 40px; border-radius: 16px; border: 1px solid #334155;">
         <h1 style="color: #10b981; margin-bottom: 24px;">Payment Successful!</h1>
         <p style="font-size: 16px; line-height: 1.5; color: #cbd5e1;">
-          Thank you for trusting Monvio. Your account has successfully been upgraded to the <strong>\${plan.toUpperCase()}</strong> tier.
+          Thank you for trusting Moneylix. Your account has successfully been upgraded to the <strong>\${plan.toUpperCase()}</strong> tier.
           <br /><br />
           Next billing date: <strong>\${expiry.toLocaleDateString()}</strong>
         </p>
@@ -92,7 +92,7 @@ export async function sendWeeklyRecapEmail(to: string, data: RecapData) {
   return resend.emails.send({
     from: FROM_EMAIL,
     to,
-    subject: 'Your Monvio Weekly Recap 📊',
+    subject: 'Your Moneylix Weekly Recap 📊',
     html: `
       <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0f172a; color: #ffffff; padding: 40px; border-radius: 16px; border: 1px solid #334155;">
         <h1 style="color: #38bdf8; margin-bottom: 24px;">Weekly Financial Recap</h1>

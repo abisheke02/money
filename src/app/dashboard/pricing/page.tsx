@@ -33,7 +33,7 @@ export default function PricingPage() {
   const [successPlan, setSuccessPlan] = useState<string | null>(null)
 
   const userId = typeof window !== 'undefined'
-    ? (localStorage.getItem('monvio_user_id') ?? '1')
+    ? (localStorage.getItem('moneylix_user_id') ?? '1')
     : '1'
 
   const handleActivate = (p: Plan) => {

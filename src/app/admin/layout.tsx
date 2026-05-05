@@ -27,7 +27,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     setMounted(true)
-    const raw = localStorage.getItem('monvio_admin_auth')
+    const raw = localStorage.getItem('moneylix_admin_auth')
     if (!raw) { router.push('/admin/login'); return }
     try {
       const { username } = JSON.parse(raw)
@@ -38,7 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [router])
 
   const handleLogout = () => {
-    localStorage.removeItem('monvio_admin_auth')
+    localStorage.removeItem('moneylix_admin_auth')
     router.push('/admin/login')
   }
 
@@ -61,7 +61,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             <div>
               <p className="text-sm font-black leading-tight tracking-tight">Admin OS</p>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Monvio v2</p>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Moneylix v2</p>
             </div>
           </Link>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/5 transition-all">

@@ -22,7 +22,7 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
 
   const refreshBusinesses = useCallback(async () => {
     try {
-      const token = localStorage.getItem('monvio_session_token') ?? ''
+      const token = localStorage.getItem('moneylix_session_token') ?? ''
       const res = await fetch('/api/businesses', {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       })

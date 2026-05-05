@@ -25,7 +25,7 @@ export default function OnboardingPage() {
     if (!businessName.trim()) { setError('Please enter a business name'); return }
     setLoading(true)
     try {
-      const token = localStorage.getItem('monvio_session_token') ?? ''
+      const token = localStorage.getItem('moneylix_session_token') ?? ''
       const res = await fetch('/api/businesses', {
         method: 'POST',
         headers: {
@@ -35,7 +35,7 @@ export default function OnboardingPage() {
         body: JSON.stringify({ name: businessName.trim() }),
       })
       if (!res.ok) throw new Error('Failed to create business')
-      localStorage.setItem('monvio_onboarded', 'true')
+      localStorage.setItem('moneylix_onboarded', 'true')
       setStep(2)
     } catch {
       setError('Something went wrong. Please try again.')
@@ -69,7 +69,7 @@ export default function OnboardingPage() {
           <div className="text-center space-y-6">
             <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-[24px] flex items-center justify-center mx-auto text-4xl font-black text-slate-950 shadow-2xl shadow-emerald-500/30">₹</div>
             <div>
-              <h1 className="text-3xl font-black text-white">Welcome to Monvio</h1>
+              <h1 className="text-3xl font-black text-white">Welcome to Moneylix</h1>
               <p className="text-slate-400 mt-2">Let&apos;s set up your account in 2 quick steps.</p>
             </div>
             <div className="grid grid-cols-2 gap-3 text-left">

@@ -18,7 +18,7 @@ export default function SettingsPage() {
     const res = await fetch(`/api/export?format=${format}&${params}`)
     const blob = format === 'json' ? new Blob([JSON.stringify(await res.json(), null, 2)], { type: 'application/json' }) : await res.blob()
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a'); a.href = url; a.download = `monvio_${activeBusiness?.name || 'export'}.${format}`; a.click(); URL.revokeObjectURL(url)
+    const a = document.createElement('a'); a.href = url; a.download = `moneylix_${activeBusiness?.name || 'export'}.${format}`; a.click(); URL.revokeObjectURL(url)
     showT(`Exported as ${format.toUpperCase()}`)
   }
 
@@ -109,7 +109,7 @@ export default function SettingsPage() {
       )
     },
     {
-      icon: <Info className="w-3.5 h-3.5 text-violet-400" />, title: 'About Monvio', desc: 'v1.0.0 — Next.js + SQLite + Tailwind',
+      icon: <Info className="w-3.5 h-3.5 text-violet-400" />, title: 'About Moneylix', desc: 'v1.0.0 — Next.js + SQLite + Tailwind',
       content: (
         <p className="mt-2 text-[10px] text-slate-500">
           Keyboard shortcuts: <span className="text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded font-mono">A</span> add transaction,{' '}
