@@ -1,25 +1,38 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import db from '@/lib/db'
 
-export async function GET() {
+function getUserId(request: NextRequest): number | null {
+  const token = request.headers.get('authorization')?.replace('Bearer ', '')
+  if (!token) return null
+  const session = db.get<{ user_id: number }>(
+    "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
+    [token]
+  )
+  return session?.user_id ?? null
+}
+
+export async function GET(request: NextRequest) {
   try {
-    // 1. Get Grand Totals across ALL businesses
+    const userId = getUserId(request)
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const grandTotals = db.get<{ totalIncome: number; totalExpense: number; totalPending: number }>(`
       SELECT
-        COALESCE(SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END), 0) as totalIncome,
-        COALESCE(SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END), 0) as totalExpense,
-        COALESCE(SUM(CASE WHEN status = 'pending' AND type = 'credit' THEN amount WHEN status = 'pending' AND type = 'debit' THEN -amount ELSE 0 END), 0) as totalPending
-      FROM transactions
-    `)
+        COALESCE(SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE 0 END), 0) as totalIncome,
+        COALESCE(SUM(CASE WHEN t.type = 'debit' THEN t.amount ELSE 0 END), 0) as totalExpense,
+        COALESCE(SUM(CASE WHEN t.status = 'pending' AND t.type = 'credit' THEN t.amount WHEN t.status = 'pending' AND t.type = 'debit' THEN -t.amount ELSE 0 END), 0) as totalPending
+      FROM transactions t
+      JOIN businesses b ON b.id = t.business_id
+      WHERE b.user_id = ?
+    `, [userId])
 
     const totalIncome = grandTotals?.totalIncome ?? 0
     const totalExpense = grandTotals?.totalExpense ?? 0
     const totalPending = grandTotals?.totalPending ?? 0
     const netProfit = totalIncome - totalExpense
 
-    // 2. Get breakdown per business
     const businessBreakdown = db.all(`
-      SELECT 
+      SELECT
         b.id,
         b.name,
         COALESCE(SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE 0 END), 0) as income,
@@ -27,9 +40,10 @@ export async function GET() {
         COALESCE(SUM(CASE WHEN t.status = 'pending' AND t.type = 'credit' THEN t.amount WHEN t.status = 'pending' AND t.type = 'debit' THEN -t.amount ELSE 0 END), 0) as pending
       FROM businesses b
       LEFT JOIN transactions t ON b.id = t.business_id
+      WHERE b.user_id = ?
       GROUP BY b.id, b.name
       ORDER BY b.name ASC
-    `)
+    `, [userId])
 
     const formattedBreakdown = businessBreakdown.map((b: any) => ({
       id: b.id,
@@ -41,12 +55,7 @@ export async function GET() {
     }))
 
     return NextResponse.json({
-      grandTotal: {
-        income: totalIncome,
-        expense: totalExpense,
-        pending: totalPending,
-        netProfit: netProfit
-      },
+      grandTotal: { income: totalIncome, expense: totalExpense, pending: totalPending, netProfit },
       breakdown: formattedBreakdown
     })
   } catch (error) {
