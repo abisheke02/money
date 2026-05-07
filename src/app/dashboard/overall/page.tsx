@@ -21,7 +21,9 @@ export default function OverallDashboard() {
   }
 
   useEffect(() => {
-    fetch('/api/overall').then(r => r.json()).then(setStats).catch(() => setError('Failed to load')).finally(() => setLoading(false))
+    const token = localStorage.getItem('moneylix_session_token') ?? ''
+    fetch('/api/overall', { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then(r => r.json()).then(setStats).catch(() => setError('Failed to load')).finally(() => setLoading(false))
   }, [])
 
   if (loading) return <div className="flex items-center justify-center h-32"><div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" /></div>

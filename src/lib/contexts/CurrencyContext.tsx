@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import type { Currency } from '@/types'
 import { useLocalStorage } from '@/lib/hooks/useLocalStorage'
 
@@ -16,9 +16,11 @@ const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const [currencies, setCurrencies] = useState<Currency[]>([])
-  const [currentCurrency, setCurrentCurrencyState] = useState<string>('USD')
+  const [currentCurrency, setCurrentCurrencyState] = useState<string>('INR')
   const [loading, setLoading] = useState(true)
-  const [savedCode, setSavedCode] = useLocalStorage<string>('active_currency', 'USD')
+  const [savedCode, setSavedCode] = useLocalStorage<string>('active_currency', 'INR')
+  const savedCodeRef = useRef(savedCode)
+  savedCodeRef.current = savedCode
 
   const refreshCurrencies = useCallback(async () => {
     try {
@@ -28,15 +30,16 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json()
       const list: Currency[] = data.currencies || []
       setCurrencies(list)
-      const valid = list.find(c => c.code === savedCode) ? savedCode : (data.defaultCurrency || 'USD')
+      const current = savedCodeRef.current
+      const valid = list.find(c => c.code === current) ? current : 'INR'
       setCurrentCurrencyState(valid)
-      if (valid !== savedCode) setSavedCode(valid)
+      if (valid !== current) setSavedCode(valid)
     } catch (error) {
       console.error('Failed to fetch currencies:', error)
     } finally {
       setLoading(false)
     }
-  }, [savedCode, setSavedCode])
+  }, [setSavedCode])
 
   useEffect(() => { refreshCurrencies() }, [refreshCurrencies])
 
@@ -45,9 +48,13 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     if (!found) return
     setCurrentCurrencyState(code)
     setSavedCode(code)
+    const token = localStorage.getItem('moneylix_session_token') ?? ''
     await fetch('/api/settings', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({ defaultCurrency: code }),
     })
   }
