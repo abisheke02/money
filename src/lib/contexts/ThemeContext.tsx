@@ -22,13 +22,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.classList.toggle('light', theme === 'light')
   }, [theme])
 
-  // Pick up OS preference on first visit (no stored value)
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !localStorage.getItem('theme')) {
-      if (window.matchMedia('(prefers-color-scheme: light)').matches) setStored('light')
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const toggleTheme = () => setStored(t => (t === 'dark' ? 'light' : 'dark'))
 
