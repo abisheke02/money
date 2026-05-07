@@ -10,30 +10,41 @@ interface CurrencySelectorProps {
 }
 
 export function CurrencySelector({ onCurrencyChange }: CurrencySelectorProps) {
-  const { currentCurrency, refreshCurrencies } = useCurrency()
+  const { currentCurrency, setCurrentCurrency, currencies: ctxCurrencies } = useCurrency()
   const [currencies, setCurrencies] = useState<Currency[]>([])
-  const [selectedCurrency, setSelectedCurrency] = useState<string>('USD')
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(currentCurrency)
   const [loading, setLoading] = useState(true)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/currencies')
-      .then(r => r.json())
-      .then(data => { setCurrencies(data.currencies); setSelectedCurrency(currentCurrency) })
-      .catch(() => setError('Failed to load currencies'))
-      .finally(() => setLoading(false))
+    if (ctxCurrencies.length > 0) {
+      setCurrencies(ctxCurrencies)
+      setLoading(false)
+    } else {
+      fetch('/api/currencies')
+        .then(r => r.json())
+        .then(data => { setCurrencies(data.currencies) })
+        .catch(() => setError('Failed to load currencies'))
+        .finally(() => setLoading(false))
+    }
+  }, [ctxCurrencies])
+
+  useEffect(() => {
+    setSelectedCurrency(currentCurrency)
   }, [currentCurrency])
 
   const handleUpdate = useCallback(async () => {
     if (selectedCurrency === currentCurrency) return
     try {
-      await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'defaultCurrency', value: selectedCurrency }) })
-      refreshCurrencies()
+      await setCurrentCurrency(selectedCurrency)
       onCurrencyChange?.(selectedCurrency)
-      setSaved(true); setTimeout(() => setSaved(false), 2000)
-    } catch { setError('Failed to update currency') }
-  }, [selectedCurrency, currentCurrency, refreshCurrencies, onCurrencyChange])
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch {
+      setError('Failed to update currency')
+    }
+  }, [selectedCurrency, currentCurrency, setCurrentCurrency, onCurrencyChange])
 
   if (loading) return <div className="text-xs text-slate-400 py-2">Loading...</div>
 
@@ -47,7 +58,6 @@ export function CurrencySelector({ onCurrencyChange }: CurrencySelectorProps) {
 
       {error && <p className="text-[10px] text-rose-400">{error}</p>}
 
-      {/* Currency table */}
       <div className="rounded-xl border border-white/10 overflow-hidden">
         <table className="w-full text-xs">
           <thead className="bg-slate-800/50 border-b border-white/10">
