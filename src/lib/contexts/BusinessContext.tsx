@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import type { Business } from '@/types'
 import { useLocalStorage } from '@/lib/hooks/useLocalStorage'
 
@@ -19,6 +19,8 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
   const [activeBusiness, setActiveBusiness] = useState<Business | null>(null)
   const [loading, setLoading] = useState(true)
   const [savedId, setSavedId] = useLocalStorage<number | null>('active_business_id', null)
+  const savedIdRef = useRef(savedId)
+  savedIdRef.current = savedId
 
   const refreshBusinesses = useCallback(async () => {
     try {
@@ -31,16 +33,17 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
       if (!Array.isArray(data)) throw new Error('Invalid businesses data')
       setBusinesses(data)
 
-      const found = savedId ? data.find(b => b.id === savedId) : null
+      const currentId = savedIdRef.current
+      const found = currentId ? data.find(b => b.id === currentId) : null
       const active = found ?? data[0] ?? null
       setActiveBusiness(active)
-      if (active && active.id !== savedId) setSavedId(active.id)
+      if (active && active.id !== currentId) setSavedId(active.id)
     } catch (error) {
       console.error('Failed to fetch businesses:', error)
     } finally {
       setLoading(false)
     }
-  }, [savedId, setSavedId])
+  }, [setSavedId])
 
   useEffect(() => { refreshBusinesses() }, [refreshBusinesses])
 
