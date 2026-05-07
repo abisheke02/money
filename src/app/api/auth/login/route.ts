@@ -4,9 +4,6 @@ import dbQuery from '@/lib/db'
 import { verifyPassword } from '@/lib/auth/password'
 import { loginSchema } from '@/lib/schemas'
 
-const hasRealResend = () =>
-  !!process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 're_dummy_123'
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -42,18 +39,6 @@ export async function POST(request: NextRequest) {
 
     if (!passwordOk) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
-    }
-
-    // Block login if real email service is active and user hasn't verified
-    if (hasRealResend() && user.email_verified === 0) {
-      return NextResponse.json(
-        {
-          error: 'Please verify your email before logging in.',
-          code: 'EMAIL_NOT_VERIFIED',
-          email: user.email,
-        },
-        { status: 403 }
-      )
     }
 
     const sessionToken = crypto.randomUUID()
