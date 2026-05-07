@@ -29,6 +29,13 @@ export async function POST(request: NextRequest) {
     )
     const userId = result.lastInsertRowid as number
 
+    // Auto-create default business for every new user
+    const now = new Date().toISOString()
+    dbQuery.run(
+      'INSERT INTO businesses (name, user_id, created_at) VALUES (?, ?, ?)',
+      ['My Finances', userId, now]
+    )
+
     return NextResponse.json(
       { message: 'Account created successfully.', userId },
       { status: 201 }
