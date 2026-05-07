@@ -27,13 +27,20 @@ export function BusinessSwitcher() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = localStorage.getItem('moneylix_session_token') ?? ''
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    return headers
+  }
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newName.trim()) return
     try {
       const res = await fetch('/api/businesses', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ name: newName.trim() }),
       })
       if (res.ok) {
@@ -52,7 +59,7 @@ export function BusinessSwitcher() {
     try {
       const res = await fetch(`/api/businesses/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ name: editName.trim() }),
       })
       if (res.ok) {
@@ -66,7 +73,11 @@ export function BusinessSwitcher() {
 
   const handleDelete = async (id: number) => {
     try {
-      const res = await fetch(`/api/businesses/${id}`, { method: 'DELETE' })
+      const token = localStorage.getItem('moneylix_session_token') ?? ''
+      const res = await fetch(`/api/businesses/${id}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
       if (res.ok) {
         if (activeBusiness?.id === id) {
           const other = businesses.find(b => b.id !== id)
