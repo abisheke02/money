@@ -39,14 +39,16 @@ export default function CategoriesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const url = editingCategory ? `/api/categories/${editingCategory.id}` : '/api/categories'
-    const res = await fetch(url, { method: editingCategory ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+    const token = localStorage.getItem('moneylix_session_token') ?? ''
+    const res = await fetch(url, { method: editingCategory ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify(form) })
     if (res.ok) { showT(editingCategory ? 'Updated' : 'Created'); setShowModal(false); setEditingCategory(null); resetForm(); fetchCategories() }
   }
 
   const handleEdit = (cat: Category) => { setForm({ name: cat.name, icon: cat.icon, color: cat.color, type: cat.type }); setEditingCategory(cat); setShowModal(true) }
   const handleDelete = async (cat: Category) => {
     if (!confirm(`Delete "${cat.name}"?`)) return
-    const res = await fetch(`/api/categories/${cat.id}`, { method: 'DELETE' })
+    const token = localStorage.getItem('moneylix_session_token') ?? ''
+    const res = await fetch(`/api/categories/${cat.id}`, { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : {} })
     if (res.ok) { showT('Deleted'); fetchCategories() } else { const d = await res.json(); showT(d.error || 'Cannot delete') }
   }
 

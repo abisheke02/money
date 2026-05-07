@@ -40,7 +40,9 @@ export default function ReceivablesPage() {
     if (!activeBusiness) return
     setLoading(true)
     try {
-      const [txRes, catRes] = await Promise.all([fetch(`/api/transactions?businessId=${activeBusiness.id}&limit=200`), fetch('/api/categories')])
+      const token = localStorage.getItem('moneylix_session_token') ?? ''
+      const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
+      const [txRes, catRes] = await Promise.all([fetch(`/api/transactions?businessId=${activeBusiness.id}&limit=200`, { headers: authHeader }), fetch('/api/categories')])
       const txData = await txRes.json(); const catData = await catRes.json()
       setCategories(catData || [])
       const now = new Date()
@@ -63,10 +65,11 @@ export default function ReceivablesPage() {
       currency: currentCurrency,
       due_date: form.due_date || null
     }
-    await fetch(url, { 
-      method: editingId ? 'PUT' : 'POST', 
-      headers: { 'Content-Type': 'application/json' }, 
-      body: JSON.stringify(payload) 
+    const token = localStorage.getItem('moneylix_session_token') ?? ''
+    await fetch(url, {
+      method: editingId ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify(payload)
     })
     setShowModal(false); setEditingId(null); resetForm(); fetchData()
   }
@@ -86,17 +89,19 @@ export default function ReceivablesPage() {
       method: rec.method, 
       due_date: rec.due_date || null 
     }
-    await fetch(`/api/transactions/${id}`, { 
-      method: 'PUT', 
-      headers: { 'Content-Type': 'application/json' }, 
-      body: JSON.stringify(payload) 
+    const token = localStorage.getItem('moneylix_session_token') ?? ''
+    await fetch(`/api/transactions/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify(payload)
     })
     fetchData()
   }
 
   const handleDelete = async (id: number) => {
     if (!confirm('Delete this entry?')) return
-    await fetch(`/api/transactions/${id}`, { method: 'DELETE' }); fetchData()
+    const token = localStorage.getItem('moneylix_session_token') ?? ''
+    await fetch(`/api/transactions/${id}`, { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : {} }); fetchData()
   }
 
   const openEdit = (r: Receivable) => {
