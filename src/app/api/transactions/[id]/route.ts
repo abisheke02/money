@@ -1,31 +1,37 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import db from '@/lib/db'
 import { transactionSchema } from '@/lib/schemas'
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const transaction = db.get('SELECT * FROM transactions WHERE id = ?', [params.id])
 
-    if (!transaction) {
-      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 })
-    }
+function getUserId(request: NextRequest): number | null {
+  const token = request.headers.get('authorization')?.replace('Bearer ', '')
+  if (!token) return null
+  const session = db.get<{ user_id: number }>(
+    "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
+    [token]
+  )
+  return session?.user_id ?? null
+}
+
+function ownsTransaction(userId: number, txId: string): boolean {
+  const tx = db.get<{ business_id: number }>(
+    'SELECT t.business_id FROM transactions t JOIN businesses b ON b.id = t.business_id WHERE t.id = ? AND b.user_id = ?',
+    [txId, userId]
+  )
+  return !!tx
+}
+
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const transaction = db.get('SELECT * FROM transactions WHERE id = ?', [params.id]) as any
+    if (!transaction) return NextResponse.json({ error: 'Transaction not found' }, { status: 404 })
 
     const categories = db.all('SELECT * FROM categories') as any[]
     const cat = categories.find(c => c.id === transaction.category_id)
 
     return NextResponse.json({
       ...transaction,
-      currency: transaction.currency || 'USD',
-      category: cat ? {
-        id: cat.id,
-        name: cat.name,
-        icon: cat.icon,
-        color: cat.color,
-        type: cat.type,
-        created_at: cat.created_at
-      } : undefined
+      currency: transaction.currency || 'INR',
+      category: cat ? { id: cat.id, name: cat.name, icon: cat.icon, color: cat.color, type: cat.type, created_at: cat.created_at } : undefined
     })
   } catch (error) {
     console.error('Transaction fetch error:', error)
@@ -33,18 +39,16 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const userId = getUserId(request)
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!ownsTransaction(userId, params.id)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const body = await request.json()
     const validation = transactionSchema.safeParse(body)
-    
-    if (!validation.success) {
-      return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 })
-    }
-    
+    if (!validation.success) return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 })
+
     const { type, amount, category_id, business_id, currency, date, due_date, reminder_days, note, method, tags, status, client_name } = validation.data
 
     const { transaction, cat } = db.transaction((tx) => {
@@ -62,15 +66,8 @@ export async function PUT(
 
     return NextResponse.json({
       ...transaction,
-      currency: transaction?.currency || 'USD',
-      category: cat ? {
-        id: cat.id,
-        name: cat.name,
-        icon: cat.icon,
-        color: cat.color,
-        type: cat.type,
-        created_at: cat.created_at
-      } : undefined
+      currency: transaction?.currency || 'INR',
+      category: cat ? { id: cat.id, name: cat.name, icon: cat.icon, color: cat.color, type: cat.type, created_at: cat.created_at } : undefined
     })
   } catch (error) {
     console.error('Transaction update error:', error)
@@ -78,20 +75,16 @@ export async function PUT(
   }
 }
 
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    db.transaction((tx) => {
-      tx.prepare('DELETE FROM transactions WHERE id = ?').run(params.id)
-    })
+    const userId = getUserId(request)
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!ownsTransaction(userId, params.id)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    db.transaction((tx) => { tx.prepare('DELETE FROM transactions WHERE id = ?').run(params.id) })
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Transaction delete error:', error)
     return NextResponse.json({ error: 'Failed to delete transaction' }, { status: 500 })
   }
 }
-
-

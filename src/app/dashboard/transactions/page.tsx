@@ -57,7 +57,9 @@ export default function TransactionsPage() {
       if (activeBusiness) params.set('businessId', activeBusiness.id.toString())
       params.set('page', filters.page.toString())
       params.set('limit', filters.limit.toString())
-      const [txRes, catRes] = await Promise.all([fetch(`/api/transactions?${params}`), fetch('/api/categories')])
+      const token = localStorage.getItem('moneylix_session_token') ?? ''
+      const authH: Record<string,string> = token ? { Authorization: `Bearer ${token}` } : {}
+      const [txRes, catRes] = await Promise.all([fetch(`/api/transactions?${params}`, { headers: authH }), fetch('/api/categories')])
       const txData = await txRes.json(); const catData = await catRes.json()
       setTransactions(txData.transactions || []); setTotal(txData.total || 0); setCategories(catData || [])
     } catch (e) { console.error(e) } finally { setLoading(false) }
@@ -93,10 +95,11 @@ export default function TransactionsPage() {
         reminder_days: parseInt(form.reminder_days) || 3,
         due_date: form.due_date || null
       }
-      const res = await fetch(url, { 
-        method: editingId ? 'PUT' : 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(payload) 
+      const token = localStorage.getItem('moneylix_session_token') ?? ''
+      const res = await fetch(url, {
+        method: editingId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify(payload)
       })
       if (res.ok) { 
         setShowModal(false); 
@@ -117,14 +120,16 @@ export default function TransactionsPage() {
   }
 
   const handleEdit = (tx: Transaction) => { setForm({ type: tx.type, status: (tx as any).status || 'completed', amount: tx.amount.toString(), category_id: tx.category_id.toString(), date: tx.date, due_date: tx.due_date || '', reminder_days: (tx.reminder_days || 3).toString(), note: tx.note || '', method: tx.method || 'cash', tags: tx.tags || '' }); setEditingId(tx.id); setShowModal(true) }
-  const handleDelete = async (tx: Transaction) => { setDeletedTransaction(tx); await fetch(`/api/transactions/${tx.id}`, { method: 'DELETE' }); showToast('Deleted', 'undo'); fetchData() }
-  const handleUndoDelete = async () => { if (!deletedTransaction) return; await fetch('/api/transactions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...deletedTransaction, business_id: activeBusiness?.id, currency: deletedTransaction.currency || currentCurrency }) }); fetchData(); setDeletedTransaction(null); showToast('Restored', 'success'); setTimeout(() => setToast(null), 3000) }
-  const handleBulkDelete = async () => { for (const id of selectedIds) await fetch(`/api/transactions/${id}`, { method: 'DELETE' }); showToast(`${selectedIds.length} deleted`, 'success'); setSelectedIds([]); fetchData() }
+  const getToken = () => localStorage.getItem('moneylix_session_token') ?? ''
+  const handleDelete = async (tx: Transaction) => { const t = getToken(); setDeletedTransaction(tx); await fetch(`/api/transactions/${tx.id}`, { method: 'DELETE', headers: t ? { Authorization: `Bearer ${t}` } : {} }); showToast('Deleted', 'undo'); fetchData() }
+  const handleUndoDelete = async () => { if (!deletedTransaction) return; const t = getToken(); await fetch('/api/transactions', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(t ? { Authorization: `Bearer ${t}` } : {}) }, body: JSON.stringify({ ...deletedTransaction, business_id: activeBusiness?.id, currency: deletedTransaction.currency || currentCurrency }) }); fetchData(); setDeletedTransaction(null); showToast('Restored', 'success'); setTimeout(() => setToast(null), 3000) }
+  const handleBulkDelete = async () => { const t = getToken(); for (const id of selectedIds) await fetch(`/api/transactions/${id}`, { method: 'DELETE', headers: t ? { Authorization: `Bearer ${t}` } : {} }); showToast(`${selectedIds.length} deleted`, 'success'); setSelectedIds([]); fetchData() }
   const handleBulkCategoryChange = async () => {
     if (!bulkCategoryId) return
+    const t = getToken()
     const res = await fetch('/api/transactions/bulk', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(t ? { Authorization: `Bearer ${t}` } : {}) },
       body: JSON.stringify({ ids: selectedIds, updates: { category_id: parseInt(bulkCategoryId) } })
     })
     if (res.ok) {
