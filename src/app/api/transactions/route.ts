@@ -1,10 +1,28 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import db from '@/lib/db'
 import { parseQuery, TransactionFiltersSchema, parseBody, CreateTransactionSchema } from '@/lib/schemas'
 import type { PaginatedTransactions } from '@/types'
 
-export async function GET(request: Request) {
+function getUserId(request: NextRequest): number | null {
+  const token = (request.headers.get('authorization') ?? '').replace('Bearer ', '')
+  if (!token) return null
+  const session = db.get<{ user_id: number }>(
+    "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
+    [token]
+  )
+  return session?.user_id ?? null
+}
+
+function userOwnsBusinessId(userId: number, businessId: number): boolean {
+  const biz = db.get('SELECT id FROM businesses WHERE id = ? AND user_id = ?', [businessId, userId])
+  return !!biz
+}
+
+export async function GET(request: NextRequest) {
   try {
+    const userId = getUserId(request)
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { searchParams } = new URL(request.url)
     const parsed = parseQuery(TransactionFiltersSchema, searchParams)
     if (parsed.error) return parsed.error
@@ -14,7 +32,16 @@ export async function GET(request: Request) {
     const conditions: string[] = []
     const params: unknown[] = []
 
-    if (businessId) { conditions.push('t.business_id = ?'); params.push(businessId) }
+    if (businessId) {
+      if (!userOwnsBusinessId(userId, businessId)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+      conditions.push('t.business_id = ?'); params.push(businessId)
+    } else {
+      // Restrict to user's own businesses when no specific businessId given
+      conditions.push('t.business_id IN (SELECT id FROM businesses WHERE user_id = ?)')
+      params.push(userId)
+    }
     if (startDate)  { conditions.push('t.date >= ?');        params.push(startDate) }
     if (endDate)    { conditions.push('t.date <= ?');        params.push(endDate) }
     if (type === 'pending') { conditions.push("t.status = 'pending'") }
@@ -94,12 +121,19 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const userId = getUserId(request)
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const parsed = parseBody(CreateTransactionSchema, await request.json())
     if (parsed.error) return parsed.error
 
     const d = parsed.data
+    if (d.business_id && !userOwnsBusinessId(userId, d.business_id)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const now = new Date().toISOString()
 
     const result = db.run(

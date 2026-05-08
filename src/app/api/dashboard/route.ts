@@ -1,8 +1,21 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import db from '@/lib/db'
 
-export async function GET(request: Request) {
+function getUserId(request: NextRequest): number | null {
+  const token = (request.headers.get('authorization') ?? '').replace('Bearer ', '')
+  if (!token) return null
+  const session = db.get<{ user_id: number }>(
+    "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
+    [token]
+  )
+  return session?.user_id ?? null
+}
+
+export async function GET(request: NextRequest) {
   try {
+    const userId = getUserId(request)
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { searchParams } = new URL(request.url)
     const businessIdParam = searchParams.get('businessId')
 
@@ -10,6 +23,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Business ID is required' }, { status: 400 })
     }
     const businessId = parseInt(businessIdParam, 10)
+
+    const biz = db.get('SELECT id FROM businesses WHERE id = ? AND user_id = ?', [businessId, userId])
+    if (!biz) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const today = new Date().toISOString().split('T')[0]
     const weekStart = new Date()

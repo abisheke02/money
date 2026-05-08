@@ -31,11 +31,13 @@ export default function DashboardPage() {
     setLoading(true)
     try {
       const bId = activeBusiness.id
+      const token = localStorage.getItem('moneylix_session_token') ?? ''
+      const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
       const [summaryRes, chartsRes, transactionsRes, remindersRes] = await Promise.all([
-        fetch(`/api/dashboard?businessId=${bId}`),
-        fetch(`/api/charts?businessId=${bId}`),
-        fetch(`/api/transactions?limit=6&sortBy=date&sortOrder=desc&businessId=${bId}`),
-        fetch(`/api/transactions?businessId=${bId}&limit=100`)
+        fetch(`/api/dashboard?businessId=${bId}`, { headers: authHeaders }),
+        fetch(`/api/charts?businessId=${bId}`, { headers: authHeaders }),
+        fetch(`/api/transactions?limit=6&sortBy=date&sortOrder=desc&businessId=${bId}`, { headers: authHeaders }),
+        fetch(`/api/transactions?businessId=${bId}&limit=100`, { headers: authHeaders })
       ])
       const summaryData = await summaryRes.json()
       const chartsData = await chartsRes.json()
