@@ -56,7 +56,8 @@ export async function GET(request: Request) {
       const dayDebit = dayTx.filter(t => t.type === 'debit').reduce((sum, t) => sum + t.amount, 0)
 
       dailyData.push({
-        date: dayName,
+        date: dateStr,
+        day: dayName,
         credit: dayCredit,
         debit: dayDebit,
       })

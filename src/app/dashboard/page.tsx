@@ -182,7 +182,7 @@ export default function DashboardPage() {
             {dailyCashflow.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={dailyCashflow} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                  <XAxis dataKey="date" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => new Date(v).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} />
+                  <XAxis dataKey="date" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => { const d = new Date(v + 'T00:00:00'); return isNaN(d.getTime()) ? v : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) }} />
                   <YAxis stroke="#475569" fontSize={10} tickLine={false} axisLine={false} />
                   <Tooltip
                     cursor={{ fill: 'rgba(255,255,255,0.05)', radius: 12 }}
