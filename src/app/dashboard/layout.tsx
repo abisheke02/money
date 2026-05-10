@@ -206,7 +206,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
             {/* Logo */}
             <div className="flex-shrink-0 px-3 py-3 flex items-center justify-between border-b border-white/5">
               <Link href="/dashboard" className="flex items-center gap-2 group">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 text-sm font-bold text-slate-950 shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-transform flex-shrink-0">₹</div>
+                <img src="/logos/moneylix-app-icon-dark.svg" alt="Moneylix" className="h-8 w-8 flex-shrink-0 group-hover:scale-105 transition-transform drop-shadow-md" />
                 <div>
                   <h1 className="text-sm font-bold leading-tight">Moneylix</h1>
                   <p className="text-[10px] text-slate-400 leading-tight">Finance Dashboard</p>

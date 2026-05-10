@@ -73,7 +73,8 @@ export default function Register() {
           </div>
         ) : (
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 lg:p-10 shadow-2xl">
-            <div className="mb-8">
+            <div className="mb-8 text-center">
+              <img src="/logos/moneylix-app-icon-dark.svg" alt="Moneylix" className="h-16 w-16 mx-auto mb-4 drop-shadow-xl" />
               <h1 className="text-3xl font-black text-white mb-2">Create Identity</h1>
               <p className="text-slate-400">Join Moneylix and conquer your finances.</p>
             </div>

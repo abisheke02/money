@@ -86,7 +86,7 @@ function LoginContent() {
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent">
       <div className="w-full max-w-md animate-fadeIn">
         <div className="text-center mb-10">
-          <div className="inline-flex h-20 w-20 items-center justify-center rounded-[24px] bg-gradient-to-br from-emerald-400 to-cyan-500 text-3xl font-black text-slate-950 shadow-2xl shadow-emerald-500/30 ring-8 ring-emerald-500/10 mb-6 font-mono">₹</div>
+          <img src="/logos/moneylix-app-icon-dark.svg" alt="Moneylix" className="h-20 w-20 mb-6 mx-auto drop-shadow-2xl" />
           <h1 className="text-4xl font-black text-white tracking-tight">Access Hub</h1>
           <p className="mt-2 text-slate-400 font-medium">Continue your financial journey.</p>
         </div>
