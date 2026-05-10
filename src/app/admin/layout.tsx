@@ -4,9 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
-  LayoutDashboard, Users, CreditCard, Lightbulb, LogOut, Shield, Menu, X, ArrowLeft, Plus, Megaphone, TicketCheck, KeyRound
+  LayoutDashboard, Users, CreditCard, Lightbulb, LogOut, Shield, Menu, X, ArrowLeft, Megaphone, TicketCheck, KeyRound, UserCog
 } from 'lucide-react'
-import Button from '@/components/ui/Button'
 import { cn } from '@/lib/utils/format'
 
 const navItems = [
@@ -16,6 +15,7 @@ const navItems = [
   { href: '/admin/features',      icon: Lightbulb,       label: 'Feature Tracker' },
   { href: '/admin/broadcast',     icon: Megaphone,       label: 'Broadcast' },
   { href: '/admin/tickets',       icon: TicketCheck,     label: 'Support Tickets' },
+  { href: '/admin/admins',        icon: UserCog,         label: 'Admin Accounts' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -203,11 +203,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
-             <div className="hidden md:flex gap-2">
-                <Button variant="outline" size="sm" className="rounded-xl border-white/5 text-[10px] uppercase font-black px-4"><Plus className="w-3 h-3 mr-1" /> New Entry</Button>
-                <div className="w-[2px] h-8 bg-white/5 mx-2" />
-             </div>
+          <div className="flex items-center gap-3">
+             <button
+               onClick={() => setShowChangePwd(true)}
+               className="flex items-center gap-2 px-3 py-2 rounded-xl border border-violet-500/20 bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 transition text-[10px] font-black uppercase tracking-widest"
+             >
+               <KeyRound className="w-3.5 h-3.5" /> Change Password
+             </button>
              <p className="text-xs font-black text-slate-500 uppercase tracking-widest hidden sm:block">Internal Access Only</p>
           </div>
         </header>
