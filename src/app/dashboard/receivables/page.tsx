@@ -29,12 +29,12 @@ export default function ReceivablesPage() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'received' | 'overdue'>('all')
 
-  const [form, setForm] = useState({ type: 'credit' as 'credit' | 'debit', client_name: '', amount: '', category_id: '', date: new Date().toISOString().split('T')[0], due_date: '', note: '', method: 'bank', status: 'pending' })
+  const [form, setForm] = useState({ type: 'credit' as 'credit' | 'debit', client_name: '', amount: '', category_id: '', date: new Date().toISOString().split('T')[0], due_date: '', note: '', method: 'bank' })
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => { setIsMounted(true) }, [])
   const fmt = useCallback((n: number) => `${currencies.find(c => c.code === currentCurrency)?.symbol ?? ''}${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, [currencies, currentCurrency])
-  const resetForm = () => setForm({ type: 'credit', client_name: '', amount: '', category_id: '', date: new Date().toISOString().split('T')[0], due_date: '', note: '', method: 'bank', status: 'pending' })
+  const resetForm = () => setForm({ type: 'credit', client_name: '', amount: '', category_id: '', date: new Date().toISOString().split('T')[0], due_date: '', note: '', method: 'bank' })
 
   const fetchData = useCallback(async () => {
     if (!activeBusiness) return
@@ -57,13 +57,14 @@ export default function ReceivablesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const url = editingId ? `/api/transactions/${editingId}` : '/api/transactions'
-    const payload = { 
-      ...form, 
-      amount: parseFloat(form.amount) || 0, 
-      category_id: form.category_id ? parseInt(form.category_id) : undefined, 
-      business_id: activeBusiness?.id, 
+    const payload = {
+      ...form,
+      amount: parseFloat(form.amount) || 0,
+      category_id: form.category_id ? parseInt(form.category_id) : undefined,
+      business_id: activeBusiness?.id,
       currency: currentCurrency,
-      due_date: form.due_date || null
+      due_date: form.due_date || null,
+      status: 'pending'
     }
     const token = localStorage.getItem('moneylix_session_token') ?? ''
     await fetch(url, {
@@ -83,7 +84,7 @@ export default function ReceivablesPage() {
       category_id: (rec as any).category_id || (categories[0]?.id || 1), 
       business_id: activeBusiness?.id, 
       date: rec.date, 
-      status: 'received', 
+      status: 'completed',
       client_name: rec.client_name, 
       note: rec.note, 
       method: rec.method, 
@@ -105,7 +106,7 @@ export default function ReceivablesPage() {
   }
 
   const openEdit = (r: Receivable) => {
-    setForm({ type: r.type, client_name: r.client_name || '', amount: r.amount.toString(), category_id: '', date: r.date, due_date: r.due_date || '', note: r.note || '', method: r.method || 'bank', status: r.status })
+    setForm({ type: r.type, client_name: r.client_name || '', amount: r.amount.toString(), category_id: '', date: r.date, due_date: r.due_date || '', note: r.note || '', method: r.method || 'bank' })
     setEditingId(r.id); setShowModal(true)
   }
 
@@ -231,8 +232,7 @@ export default function ReceivablesPage() {
                 <div><label className="block text-[10px] font-medium text-slate-400 mb-1">Category *</label><select required value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-xs text-white focus:outline-none"><option value="">Select</option>{creditCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
                 <div><label className="block text-[10px] font-medium text-slate-400 mb-1">Date *</label><input required type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-xs text-white focus:outline-none" /></div>
                 <div><label className="block text-[10px] font-medium text-slate-400 mb-1">Due Date</label><input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-xs text-white focus:outline-none" /></div>
-                <div><label className="block text-[10px] font-medium text-slate-400 mb-1">Method</label><select value={form.method} onChange={e => setForm(f => ({ ...f, method: e.target.value }))} className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-xs text-white focus:outline-none"><option value="bank">Bank</option><option value="cash">Cash</option><option value="upi">UPI</option><option value="card">Card</option><option value="cheque">Cheque</option></select></div>
-                <div><label className="block text-[10px] font-medium text-slate-400 mb-1">Status</label><select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-xs text-white focus:outline-none"><option value="pending">Pending</option><option value="received">Received</option><option value="completed">Completed</option></select></div>
+                <div className="col-span-2"><label className="block text-[10px] font-medium text-slate-400 mb-1">Method</label><select value={form.method} onChange={e => setForm(f => ({ ...f, method: e.target.value }))} className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-xs text-white focus:outline-none"><option value="bank">Bank</option><option value="cash">Cash</option><option value="upi">UPI</option><option value="card">Card</option><option value="cheque">Cheque</option></select></div>
               </div>
               <div><label className="block text-[10px] font-medium text-slate-400 mb-1">Description</label><input value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} placeholder="e.g. Web design — April 2026" className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-xs text-white focus:outline-none" /></div>
               <button type="submit" className="w-full py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 text-xs font-bold">{editingId ? 'Update' : 'Add Entry'}</button>

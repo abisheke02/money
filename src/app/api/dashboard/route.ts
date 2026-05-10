@@ -54,9 +54,9 @@ export async function GET(request: NextRequest) {
     const pending = getAgg("AND status = 'pending'", "")
     const totalPending = pending.credit - pending.debit
 
-    const todayStats = getAgg("", "AND date = ?", today)
-    const weekStats = getAgg("", "AND date >= ?", weekStartStr)
-    const monthStats = getAgg("", "AND date >= ?", monthStartStr)
+    const todayStats = getAgg("AND status != 'pending'", "AND date = ?", today)
+    const weekStats = getAgg("AND status != 'pending'", "AND date >= ?", weekStartStr)
+    const monthStats = getAgg("AND status != 'pending'", "AND date >= ?", monthStartStr)
 
     const summary = {
       totalBalance,
