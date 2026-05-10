@@ -24,6 +24,7 @@ export default function ReceivablesPage() {
   const { currentCurrency, currencies } = useCurrency()
   const [records, setRecords] = useState<Receivable[]>([])
   const [categories, setCategories] = useState<any[]>([])
+  const [businesses, setBusinesses] = useState<{ id: number; name: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -42,9 +43,16 @@ export default function ReceivablesPage() {
     try {
       const token = localStorage.getItem('moneylix_session_token') ?? ''
       const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
-      const [txRes, catRes] = await Promise.all([fetch(`/api/transactions?businessId=${activeBusiness.id}&limit=200`, { headers: authHeader }), fetch('/api/categories')])
-      const txData = await txRes.json(); const catData = await catRes.json()
+      const [txRes, catRes, bizRes] = await Promise.all([
+        fetch(`/api/transactions?businessId=${activeBusiness.id}&limit=200`, { headers: authHeader }),
+        fetch('/api/categories'),
+        fetch('/api/businesses', { headers: authHeader })
+      ])
+      const txData = await txRes.json()
+      const catData = await catRes.json()
+      const bizData = await bizRes.json()
       setCategories(catData || [])
+      setBusinesses(Array.isArray(bizData) ? bizData : [])
       const now = new Date()
       setRecords((txData.transactions || []).filter((t: any) => t.client_name || t.status === 'pending' || t.status === 'received').map((t: any) => ({
         ...t, status: t.due_date && t.status === 'pending' && new Date(t.due_date) < now ? 'overdue' : (t.status || 'pending')
@@ -226,7 +234,20 @@ export default function ReceivablesPage() {
                   </button>
                 ))}
               </div>
-              <div><label className="block text-[10px] font-medium text-slate-400 mb-1">Client / Business *</label><input required value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} placeholder="e.g. Rajesh Kumar" className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50" /></div>
+              <div>
+                <label className="block text-[10px] font-medium text-slate-400 mb-1">Client / Business *</label>
+                <input
+                  required
+                  list="business-list"
+                  value={form.client_name}
+                  onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))}
+                  placeholder="Select or type a name..."
+                  className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                />
+                <datalist id="business-list">
+                  {businesses.map(b => <option key={b.id} value={b.name} />)}
+                </datalist>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <div><label className="block text-[10px] font-medium text-slate-400 mb-1">Amount *</label><input required type="number" min="0" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-xs text-white focus:outline-none font-mono" /></div>
                 <div><label className="block text-[10px] font-medium text-slate-400 mb-1">Category *</label><select required value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-xs text-white focus:outline-none"><option value="">Select</option>{creditCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
