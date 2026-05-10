@@ -4,7 +4,7 @@ const resendApiKey = process.env.RESEND_API_KEY || 're_dummy_123'
 export const resend = new Resend(resendApiKey)
 
 // You must verify this domain in Resend for emails to hit inboxes
-const FROM_EMAIL = 'Moneylix <no-reply@moneylix.app>'
+const FROM_EMAIL = 'Moneylix <noreply@moneylix.in>'
 
 export async function sendVerificationEmail(to: string, token: string, name: string) {
   const verifyLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${token}`
