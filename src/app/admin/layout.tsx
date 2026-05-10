@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
-  LayoutDashboard, Users, CreditCard, Lightbulb, LogOut, Shield, Menu, X, ArrowLeft, Plus, Megaphone, TicketCheck
+  LayoutDashboard, Users, CreditCard, Lightbulb, LogOut, Shield, Menu, X, ArrowLeft, Plus, Megaphone, TicketCheck, KeyRound
 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import { cn } from '@/lib/utils/format'
@@ -24,6 +24,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [mounted, setMounted] = useState(false)
   const [adminName, setAdminName] = useState('Admin')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showChangePwd, setShowChangePwd] = useState(false)
+  const [pwdForm, setPwdForm] = useState({ current: '', next: '', confirm: '' })
+  const [pwdError, setPwdError] = useState('')
+  const [pwdSuccess, setPwdSuccess] = useState(false)
+  const [pwdLoading, setPwdLoading] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -40,6 +45,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleLogout = () => {
     localStorage.removeItem('moneylix_admin_auth')
     router.push('/admin/login')
+  }
+
+  const handleChangePwd = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPwdError('')
+    if (pwdForm.next !== pwdForm.confirm) { setPwdError('New passwords do not match'); return }
+    setPwdLoading(true)
+    try {
+      const token = JSON.parse(localStorage.getItem('moneylix_admin_auth') || '{}').token
+      const res = await fetch('/api/admin/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ currentPassword: pwdForm.current, newPassword: pwdForm.next })
+      })
+      const data = await res.json()
+      if (!res.ok) { setPwdError(data.error || 'Failed'); return }
+      setPwdSuccess(true)
+      setTimeout(() => { setShowChangePwd(false); setPwdSuccess(false); setPwdForm({ current: '', next: '', confirm: '' }) }, 1500)
+    } catch { setPwdError('Network error') } finally { setPwdLoading(false) }
   }
 
   if (!mounted) return null
@@ -106,6 +130,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
              </div>
           </div>
           <button
+            onClick={() => setShowChangePwd(true)}
+            className="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-black text-slate-500 hover:text-violet-400 hover:bg-violet-500/10 transition-all w-full border border-transparent hover:border-violet-500/20"
+          >
+            <KeyRound className="w-4 h-4" />
+            Change Password
+          </button>
+          <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-black text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all w-full border border-transparent hover:border-rose-500/20"
           >
@@ -114,6 +145,42 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
         </div>
       </aside>
+
+      {/* Change Password Modal */}
+      {showChangePwd && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-slate-900 shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+              <p className="text-sm font-black text-white">Change Admin Password</p>
+              <button onClick={() => { setShowChangePwd(false); setPwdError(''); setPwdForm({ current: '', next: '', confirm: '' }) }}><X className="w-4 h-4 text-slate-400 hover:text-white" /></button>
+            </div>
+            {pwdSuccess ? (
+              <div className="px-5 py-8 text-center text-emerald-400 font-black text-sm">Password updated successfully!</div>
+            ) : (
+              <form onSubmit={handleChangePwd} className="p-5 space-y-3">
+                {['current', 'next', 'confirm'].map((field, i) => (
+                  <div key={field}>
+                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">
+                      {i === 0 ? 'Current Password' : i === 1 ? 'New Password' : 'Confirm New Password'}
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      value={(pwdForm as any)[field]}
+                      onChange={e => setPwdForm(f => ({ ...f, [field]: e.target.value }))}
+                      className="w-full rounded-xl border border-white/10 bg-slate-800 px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                    />
+                  </div>
+                ))}
+                {pwdError && <p className="text-xs text-rose-400 font-bold">{pwdError}</p>}
+                <button type="submit" disabled={pwdLoading} className="w-full py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white text-xs font-black disabled:opacity-60">
+                  {pwdLoading ? 'Updating...' : 'Update Password'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
