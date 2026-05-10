@@ -236,17 +236,28 @@ export default function ReceivablesPage() {
               </div>
               <div>
                 <label className="block text-[10px] font-medium text-slate-400 mb-1">Client / Business *</label>
-                <input
+                <select
                   required
-                  list="business-list"
-                  value={form.client_name}
-                  onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))}
-                  placeholder="Select or type a name..."
+                  value={businesses.find(b => b.name === form.client_name) ? form.client_name : (form.client_name ? '__other__' : '')}
+                  onChange={e => {
+                    if (e.target.value === '__other__') setForm(f => ({ ...f, client_name: '' }))
+                    else setForm(f => ({ ...f, client_name: e.target.value }))
+                  }}
                   className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
-                />
-                <datalist id="business-list">
-                  {businesses.map(b => <option key={b.id} value={b.name} />)}
-                </datalist>
+                >
+                  <option value="">— Select business —</option>
+                  {businesses.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+                  <option value="__other__">Other (type below)</option>
+                </select>
+                {(form.client_name && !businesses.find(b => b.name === form.client_name)) && (
+                  <input
+                    required
+                    value={form.client_name}
+                    onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))}
+                    placeholder="Enter client name..."
+                    className="mt-1.5 w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                  />
+                )}
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div><label className="block text-[10px] font-medium text-slate-400 mb-1">Amount *</label><input required type="number" min="0" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-xs text-white focus:outline-none font-mono" /></div>
