@@ -1,9 +1,28 @@
 'use client'
 
 import { useState } from 'react'
-import { usePlan, PLAN_FEATURES, PLAN_LABELS, Plan } from '@/lib/contexts/PlanContext'
+import { usePlan, PLAN_LABELS, Plan } from '@/lib/contexts/PlanContext'
 import { Check, X, Zap, Crown, Sparkles, CheckCircle } from 'lucide-react'
 import UpgradeModal from '@/components/payments/UpgradeModal'
+
+type Billing = 'monthly' | 'halfyearly' | 'annual'
+
+const PRICING = {
+  pro:     { monthly: 199,  halfyearly: 999,  annual: 1788 },
+  premium: { monthly: 499,  halfyearly: 2499, annual: 3588 },
+}
+
+const MONTHLY_EQUIV: Record<Billing, { pro: string; premium: string }> = {
+  monthly:    { pro: '₹199/mo',  premium: '₹499/mo' },
+  halfyearly: { pro: '₹166/mo',  premium: '₹416/mo' },
+  annual:     { pro: '₹149/mo',  premium: '₹299/mo' },
+}
+
+const SAVINGS: Record<Billing, { pro: string; premium: string } | null> = {
+  monthly:    null,
+  halfyearly: { pro: 'Save ₹195',  premium: 'Save ₹495' },
+  annual:     { pro: 'Save ₹600',  premium: 'Save ₹2,400' },
+}
 
 const plans: { key: Plan; icon: any; features: string[]; locked: string[] }[] = [
   {
@@ -31,6 +50,7 @@ export default function PricingPage() {
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<'pro' | 'premium'>('pro')
   const [successPlan, setSuccessPlan] = useState<string | null>(null)
+  const [billing, setBilling] = useState<Billing>('monthly')
 
   const userId = typeof window !== 'undefined'
     ? (localStorage.getItem('moneylix_user_id') ?? '1')
@@ -67,9 +87,21 @@ export default function PricingPage() {
         />
       )}
 
-      <div>
-        <h1 className="text-base font-bold text-white">Plans & Pricing</h1>
-        <p className="text-[10px] text-slate-400">Choose the plan that fits your needs</p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-base font-bold text-white">Plans & Pricing</h1>
+          <p className="text-[10px] text-slate-400">Choose the plan that fits your needs</p>
+        </div>
+        {/* Billing Toggle */}
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/5 border border-white/10">
+          {(['monthly', 'halfyearly', 'annual'] as Billing[]).map(b => (
+            <button key={b} onClick={() => setBilling(b)}
+              className={`relative px-3 py-1.5 rounded-lg text-[10px] font-black transition ${billing === b ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'text-slate-400 hover:text-white'}`}>
+              {b === 'monthly' ? 'Monthly' : b === 'halfyearly' ? 'Half-Yearly' : 'Annual'}
+              {b === 'annual' && <span className="absolute -top-2 -right-1 bg-emerald-500 text-white text-[7px] font-black px-1 py-0.5 rounded-full leading-none">SAVE</span>}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
@@ -100,11 +132,25 @@ export default function PricingPage() {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">{label.name}</p>
-                  <p className={`text-xs font-semibold ${label.color}`}>{label.price}</p>
+                  {key === 'free' ? (
+                    <p className="text-xs font-semibold text-slate-400">₹0/mo</p>
+                  ) : (
+                    <div>
+                      <p className={`text-xs font-semibold ${label.color}`}>
+                        ₹{PRICING[key as 'pro'|'premium'][billing].toLocaleString()}
+                      </p>
+                      <p className="text-[9px] text-slate-500">{MONTHLY_EQUIV[billing][key as 'pro'|'premium']} equiv</p>
+                    </div>
+                  )}
                 </div>
-                {isCurrent && (
-                  <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${label.badge}`}>Active</span>
-                )}
+                <div className="ml-auto flex flex-col items-end gap-1">
+                  {isCurrent && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${label.badge}`}>Active</span>}
+                  {!isCurrent && SAVINGS[billing] && key !== 'free' && (
+                    <span className="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded-full font-bold">
+                      {SAVINGS[billing]![key as 'pro'|'premium']}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Features */}

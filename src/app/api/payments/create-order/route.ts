@@ -1,35 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import razorpay from '@/lib/razorpay'
 
-// Map plans to their INR amounts (in paise)
-const PLAN_PRICING = {
-  pro: 199 * 100,
-  premium: 499 * 100,
+// Pricing in INR (paise = amount × 100)
+const PLAN_PRICING: Record<string, Record<string, number>> = {
+  pro: {
+    monthly:    199,
+    halfyearly: 999,
+    annual:     1788,
+  },
+  premium: {
+    monthly:    499,
+    halfyearly: 2499,
+    annual:     3588,
+  },
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { plan, userId } = await request.json()
+    const { plan, userId, billing = 'monthly' } = await request.json()
 
-    if (!plan || (plan !== 'pro' && plan !== 'premium')) {
+    if (!plan || !['pro', 'premium'].includes(plan)) {
       return NextResponse.json({ error: 'Invalid plan selected' }, { status: 400 })
     }
-
+    if (!['monthly', 'halfyearly', 'annual'].includes(billing)) {
+      return NextResponse.json({ error: 'Invalid billing cycle' }, { status: 400 })
+    }
     if (!userId) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
     }
 
-    const amount = PLAN_PRICING[plan as keyof typeof PLAN_PRICING]
+    const amount = PLAN_PRICING[plan][billing] * 100 // convert to paise
 
-    // Create an order via Razorpay API
     const order = await razorpay.orders.create({
       amount,
       currency: 'INR',
-      receipt: `receipt_user_${userId}_${Date.now()}`,
-      notes: {
-        userId: userId.toString(),
-        plan,
-      }
+      receipt: `receipt_${userId}_${Date.now()}`,
+      notes: { userId: userId.toString(), plan, billing }
     })
 
     return NextResponse.json({
