@@ -42,7 +42,7 @@ Here is my financial summary:
 
 Provide personalized investment recommendations for Gold, SIP mutual funds, and Fixed Deposits. Also suggest ways to reduce expenses and improve savings.`
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' })
     const result = await model.generateContent(userPrompt)
     const text = result.response.text()
 

@@ -44,7 +44,7 @@ export default function AIRecommendationsPage() {
         </div>
         <div>
           <h1 className="text-base font-bold text-white">AI Investment Advisor</h1>
-          <p className="text-[10px] text-slate-400">Powered by Claude AI</p>
+          <p className="text-[10px] text-slate-400">Powered by Gemini AI</p>
         </div>
       </div>
 
