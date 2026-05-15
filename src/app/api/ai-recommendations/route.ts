@@ -1,26 +1,7 @@
 import { NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-
-const SYSTEM_PROMPT = `You are a personal finance advisor specializing in Indian investment markets.
-Analyze the user's financial data and provide actionable recommendations.
-
-Always respond with valid JSON in exactly this structure:
-{
-  "savings": ["tip1", "tip2", "tip3", "tip4", "tip5"],
-  "investments": {
-    "gold": "specific gold investment advice with amounts and expected returns",
-    "sip": "specific SIP/mutual fund advice with fund types and monthly amounts",
-    "fd": "specific FD advice with bank options and expected rates"
-  },
-  "summary": "2-3 sentence overall financial health assessment",
-  "riskProfile": "conservative|moderate|aggressive",
-  "monthlyInvestmentCapacity": number
-}
-
-Keep advice practical, specific to Indian markets, and based on the provided financial data.
-Respond with ONLY the JSON object, no extra text.`
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`
 
 export async function POST(request: Request) {
   try {
@@ -31,25 +12,46 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required financial data' }, { status: 400 })
     }
 
-    const userPrompt = `${SYSTEM_PROMPT}
+    const prompt = `You are a personal finance advisor for Indian markets.
+Analyze this financial data and respond with ONLY a valid JSON object:
 
-Here is my financial summary:
+{
+  "savings": ["tip1", "tip2", "tip3", "tip4", "tip5"],
+  "investments": {
+    "gold": "gold advice with amounts",
+    "sip": "SIP/mutual fund advice",
+    "fd": "FD advice with rates"
+  },
+  "summary": "2-3 sentence assessment",
+  "riskProfile": "conservative",
+  "monthlyInvestmentCapacity": 5000
+}
+
+Financial data:
 - Monthly Income: ${currency} ${income.toLocaleString()}
 - Monthly Expenses: ${currency} ${expenses.toLocaleString()}
 - Current Balance: ${currency} ${balance.toLocaleString()}
 - Savings Rate: ${savingsRate.toFixed(1)}%
-- Top Spending Categories: ${topCategories?.map((c: any) => `${c.name} (${currency} ${c.amount})`).join(', ') || 'N/A'}
 
-Provide personalized investment recommendations for Gold, SIP mutual funds, and Fixed Deposits. Also suggest ways to reduce expenses and improve savings.`
+Respond with ONLY the JSON, no markdown, no extra text.`
 
-    // Use v1 API version to access gemini-1.5-flash
-    const model = genAI.getGenerativeModel(
-      { model: 'gemini-1.5-flash' },
-      { apiVersion: 'v1' }
-    )
+    const res = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+      })
+    })
 
-    const result = await model.generateContent(userPrompt)
-    const text = result.response.text()
+    if (!res.ok) {
+      const errText = await res.text()
+      console.error('Gemini API error:', res.status, errText)
+      return NextResponse.json({ error: 'AI service unavailable' }, { status: 500 })
+    }
+
+    const data = await res.json()
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
 
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new Error('Could not parse JSON from response')
