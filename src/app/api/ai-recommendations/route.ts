@@ -42,7 +42,12 @@ Here is my financial summary:
 
 Provide personalized investment recommendations for Gold, SIP mutual funds, and Fixed Deposits. Also suggest ways to reduce expenses and improve savings.`
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' })
+    // Use v1 API version to access gemini-1.5-flash
+    const model = genAI.getGenerativeModel(
+      { model: 'gemini-1.5-flash' },
+      { apiVersion: 'v1' }
+    )
+
     const result = await model.generateContent(userPrompt)
     const text = result.response.text()
 
@@ -51,8 +56,8 @@ Provide personalized investment recommendations for Gold, SIP mutual funds, and 
 
     const recommendations = JSON.parse(jsonMatch[0])
     return NextResponse.json(recommendations)
-  } catch (error) {
-    console.error('AI recommendations error:', error)
+  } catch (error: any) {
+    console.error('AI recommendations error:', error?.message || error)
     return NextResponse.json({ error: 'Failed to generate recommendations' }, { status: 500 })
   }
 }
