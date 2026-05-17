@@ -1,4 +1,20 @@
 /** @type {import('next').NextConfig} */
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+  runtimeCaching: [
+    {
+      urlPattern: /^https:\/\/moneylix\.in\/.*/i,
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'moneylix-cache',
+        expiration: { maxEntries: 200, maxAgeSeconds: 24 * 60 * 60 },
+      },
+    },
+  ],
+})
 
 const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
@@ -18,7 +34,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https://checkout.razorpay.com https://cdn.razorpay.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "connect-src 'self' https://api.razorpay.com https://cdn.razorpay.com https://lumberjack.razorpay.com",
+      "connect-src 'self' https://api.razorpay.com https://cdn.razorpay.com https://lumberjack.razorpay.com https://generativelanguage.googleapis.com",
       "frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com",
       "frame-ancestors 'none'",
     ].join('; '),
@@ -37,4 +53,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withPWA(nextConfig)
