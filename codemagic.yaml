@@ -9,10 +9,10 @@ workflows:
         BUNDLE_ID: "in.moneylix.app"
       node: latest
     scripts:
-      - name: Install dependencies
-        script: npm install --ignore-scripts
-      - name: Build web assets
-        script: npm run build
+      - name: Install Capacitor dependencies
+        script: |
+          npm install --ignore-scripts
+          npm install @capacitor/ios @capacitor/core @capacitor/cli @capacitor/app @capacitor/splash-screen @capacitor/status-bar
       - name: Capacitor sync
         script: npx cap sync ios
       - name: Set up code signing
