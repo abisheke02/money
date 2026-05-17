@@ -3,15 +3,10 @@ workflows:
     name: Moneylix iOS
     max_build_duration: 60
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: in.moneylix.app
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
-        APP_STORE_CONNECT_ISSUER_ID: $APP_STORE_CONNECT_ISSUER_ID
-        APP_STORE_CONNECT_KEY_IDENTIFIER: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        APP_STORE_CONNECT_PRIVATE_KEY: $APP_STORE_CONNECT_PRIVATE_KEY
+        BUNDLE_ID: "in.moneylix.app"
       node: latest
     scripts:
       - name: Install dependencies
@@ -21,7 +16,16 @@ workflows:
       - name: Capacitor sync
         script: npx cap sync ios
       - name: Set up code signing
-        script: xcode-project use-profiles
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --private-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
+            --create
+          keychain initialize
+          keychain add-certificates
+          xcode-project use-profiles
       - name: Build iOS
         script: |
           xcode-project build-ipa \
