@@ -32,6 +32,9 @@ workflows:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
     publishing:
+      app_store_connect:
+        auth: environment_variables
+        submit_to_testflight: true
       email:
         recipients:
           - abi.tvm02@gmail.com
