@@ -30,13 +30,12 @@ workflows:
             --scheme "$XCODE_SCHEME"
       - name: Upload to TestFlight
         script: |
-          mkdir -p ~/.appstoreconnect/private_keys
-          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_2MD2Y9SU32.p8
-          xcrun altool --upload-app \
-            --type ios \
-            --file "$(find build/ios/ipa -name '*.ipa')" \
-            --apiKey "2MD2Y9SU32" \
-            --apiIssuer "f2960eae-91ee-4282-b29c-0f795d8f1315"
+          app-store-connect publish \
+            --path "$(find build/ios/ipa -name '*.ipa')" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --private-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
+            --testflight
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
