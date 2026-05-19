@@ -235,7 +235,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
 
           {/* Main */}
           <div className="flex-1 flex flex-col h-screen overflow-hidden">
-            <header className="h-20 bg-background/80 backdrop-blur-2xl sticky top-0 z-30 flex items-center justify-between px-6 lg:px-10 border-b border-white/5">
+            <header className="bg-background/80 backdrop-blur-2xl sticky top-0 z-30 flex items-center justify-between px-4 lg:px-10 border-b border-white/5" style={{paddingTop: 'max(env(safe-area-inset-top), 12px)', paddingBottom: '12px'}}>
               <div className="flex items-center gap-4">
                 <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2.5 rounded-2xl bg-white/5 text-slate-400 hover:text-white transition-colors border border-white/5"><Menu className="w-5 h-5" /></button>
                 <div className="hidden lg:flex flex-col">
