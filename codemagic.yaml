@@ -36,7 +36,7 @@ workflows:
             --path "$(find build/ios/ipa -name '*.ipa')" \
             --issuer-id "f2960eae-91ee-4282-b29c-0f795d8f1315" \
             --key-id "2MD2Y9SU32" \
-            --private-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
+            --private-key "@env:APP_STORE_CONNECT_PRIVATE_KEY" \
             --testflight
     artifacts:
       - build/ios/ipa/*.ipa
