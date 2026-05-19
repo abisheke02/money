@@ -39,7 +39,8 @@ workflows:
             --issuer-id "f2960eae-91ee-4282-b29c-0f795d8f1315" \
             --key-id "2MD2Y9SU32" \
             --private-key "@file:$HOME/.appstoreconnect/private_keys/AuthKey_2MD2Y9SU32.p8" \
-            --testflight
+            --testflight \
+            --beta-build-localizations "[{\"locale\": \"en-US\", \"whatsNew\": \"Initial beta release of Moneylix - Smart Finance Management for freelancers and small businesses.\"}]"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
