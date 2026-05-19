@@ -141,23 +141,23 @@ export default function DashboardPage() {
       </header>
 
       {/* Summary Row */}
-      <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 grid-cols-2 xl:grid-cols-4">
         {summaryCards.map((card) => (
-          <div key={card.title} className={cn("rounded-[32px] border p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl bg-gradient-to-br", card.border, card.bg)}>
+          <div key={card.title} className={cn("rounded-2xl border p-3 sm:p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl bg-gradient-to-br", card.border, card.bg)}>
             <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{card.title}</p>
-                <h3 className="mt-4 text-xl sm:text-2xl md:text-3xl font-black text-white font-mono tabular-nums">{card.value}</h3>
+              <div className="flex-1 min-w-0 mr-2">
+                <p className="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest truncate">{card.title}</p>
+                <h3 className="mt-2 text-sm sm:text-2xl md:text-3xl font-black text-white font-mono tabular-nums truncate">{card.value}</h3>
               </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/5 shadow-inner">
-                <card.icon className={cn("w-6 h-6", card.color)} />
+              <div className="flex h-8 w-8 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/5 shadow-inner">
+                <card.icon className={cn("w-4 h-4 sm:w-6 sm:h-6", card.color)} />
               </div>
             </div>
-            <div className="mt-6 flex items-center gap-2">
-              <span className="rounded-full bg-emerald-400/10 border border-emerald-500/20 px-3 py-0.5 text-[10px] font-black text-emerald-400">
+            <div className="mt-3 flex items-center gap-1">
+              <span className="rounded-full bg-emerald-400/10 border border-emerald-500/20 px-2 py-0.5 text-[9px] sm:text-[10px] font-black text-emerald-400">
                 {card.change}
               </span>
-              <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500 tracking-wider truncate">
                 {card.sub}
               </span>
             </div>
