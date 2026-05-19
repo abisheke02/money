@@ -1,14 +1,34 @@
 'use client'
 
 import { useState } from 'react'
-import { Download, Upload, Info } from 'lucide-react'
+import Link from 'next/link'
+import { Download, Upload, Info, Tags, ClipboardList, Calculator, CreditCard, HelpCircle, LogOut } from 'lucide-react'
 import { CurrencySelector } from '@/app/components/CurrencySelector'
 import { useBusiness } from '@/lib/contexts/BusinessContext'
+import { useRouter } from 'next/navigation'
+
+const quickLinks = [
+  { href: '/dashboard/categories',  icon: Tags,          label: 'Categories',  desc: 'Manage expense & income categories', color: 'text-violet-400', bg: 'bg-violet-500/10' },
+  { href: '/dashboard/receivables', icon: ClipboardList, label: 'Receivables', desc: 'Track pending client payments',        color: 'text-amber-400',  bg: 'bg-amber-500/10'  },
+  { href: '/dashboard/calculator',  icon: Calculator,    label: 'Calculator',  desc: 'Financial calculator with history',   color: 'text-cyan-400',   bg: 'bg-cyan-500/10'   },
+  { href: '/dashboard/pricing',     icon: CreditCard,    label: 'Plans',       desc: 'Upgrade your Moneylix plan',          color: 'text-emerald-400',bg: 'bg-emerald-500/10'},
+  { href: '/dashboard/help',        icon: HelpCircle,    label: 'Help',        desc: 'FAQs and support center',             color: 'text-blue-400',   bg: 'bg-blue-500/10'   },
+]
 
 export default function SettingsPage() {
   const { activeBusiness } = useBusiness()
+  const router = useRouter()
   const [toast, setToast] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
+
+  const handleLogout = () => {
+    localStorage.removeItem('moneylix_auth')
+    localStorage.removeItem('moneylix_session_token')
+    localStorage.removeItem('moneylix_plan')
+    localStorage.removeItem('moneylix_plan_expires')
+    localStorage.removeItem('moneylix_plan_days')
+    router.push('/')
+  }
 
   const showT = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2500) }
 
@@ -120,10 +140,25 @@ export default function SettingsPage() {
   ]
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div>
         <h1 className="text-base font-bold text-white">Settings</h1>
         <p className="text-[10px] text-slate-400">Manage preferences & data</p>
+      </div>
+
+      {/* Quick Links — mobile only */}
+      <div className="grid grid-cols-2 gap-3 lg:hidden">
+        {quickLinks.map(({ href, icon: Icon, label, desc, color, bg }) => (
+          <Link key={href} href={href} className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col gap-2 active:scale-95 transition-all">
+            <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center`}>
+              <Icon className={`w-5 h-5 ${color}`} />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white">{label}</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">{desc}</p>
+            </div>
+          </Link>
+        ))}
       </div>
 
       {/* Currency */}
@@ -132,7 +167,7 @@ export default function SettingsPage() {
         <CurrencySelector />
       </div>
 
-      {/* Other sections */}
+      {/* Data sections */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {sections.map(({ icon, title, desc, content }) => (
           <div key={title} className="rounded-2xl border border-white/10 bg-white/5 p-3">
@@ -146,7 +181,12 @@ export default function SettingsPage() {
         ))}
       </div>
 
-      {toast && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 border border-white/10 text-white px-4 py-2 rounded-full shadow-2xl z-50 text-xs">{toast}</div>}
+      {/* Logout — mobile only */}
+      <button onClick={handleLogout} className="lg:hidden w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-rose-500/20 bg-rose-500/10 text-rose-400 text-sm font-bold active:scale-95 transition-all">
+        <LogOut className="w-4 h-4" /> Logout
+      </button>
+
+      {toast && <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-slate-900 border border-white/10 text-white px-4 py-2 rounded-full shadow-2xl z-50 text-xs">{toast}</div>}
     </div>
   )
 }

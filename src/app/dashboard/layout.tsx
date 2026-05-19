@@ -4,18 +4,19 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
-  LayoutDashboard, Receipt, Tags, Settings, LogOut, Menu, X,
+  LayoutDashboard, Receipt, Settings, LogOut, X,
   Bell, Globe, Calculator, ClipboardList, Sparkles, Lock, CreditCard,
-  Crown, AlertTriangle, Info, HelpCircle,
+  Crown, AlertTriangle, Info, HelpCircle, Plus, Tags,
 } from 'lucide-react'
-import { BusinessProvider } from '@/lib/contexts/BusinessContext'
+import { BusinessProvider, useBusiness } from '@/lib/contexts/BusinessContext'
 import { CurrencyProvider } from '@/lib/contexts/CurrencyContext'
 import { PlanProvider, usePlan, PLAN_LABELS } from '@/lib/contexts/PlanContext'
 import { ThemeToggle } from '@/app/components/ThemeToggle'
 import { BusinessSwitcher } from '@/app/components/BusinessSwitcher'
 import { ErrorBoundary } from '@/app/components/ErrorBoundary'
 
-const navItems = [
+// Desktop sidebar nav items
+const sidebarItems = [
   { href: '/dashboard',               icon: LayoutDashboard, label: 'Dashboard',    gate: null },
   { href: '/dashboard/transactions',  icon: Receipt,         label: 'Transactions', gate: null },
   { href: '/dashboard/categories',    icon: Tags,            label: 'Categories',   gate: null },
@@ -28,6 +29,15 @@ const navItems = [
   { href: '/dashboard/help',          icon: HelpCircle,      label: 'Help',         gate: null },
 ]
 
+// Mobile bottom nav (5 tabs)
+const bottomNavItems = [
+  { href: '/dashboard',              icon: LayoutDashboard, label: 'Home' },
+  { href: '/dashboard/transactions', icon: Receipt,         label: 'Transactions' },
+  { href: '/dashboard/overall',      icon: Globe,           label: 'Overall' },
+  { href: '/dashboard/ai',           icon: Sparkles,        label: 'AI' },
+  { href: '/dashboard/settings',     icon: Settings,        label: 'Settings' },
+]
+
 function SidebarContent({ onClose }: { onClose: () => void }) {
   const pathname = usePathname()
   const { plan, features } = usePlan()
@@ -35,9 +45,8 @@ function SidebarContent({ onClose }: { onClose: () => void }) {
 
   return (
     <>
-      {/* Navigation */}
       <nav className="px-2 space-y-0.5">
-        {navItems.map((item) => {
+        {sidebarItems.map((item) => {
           const isActive = pathname === item.href
           const isLocked = item.gate && !features[item.gate as keyof typeof features]
           return (
@@ -60,8 +69,6 @@ function SidebarContent({ onClose }: { onClose: () => void }) {
           )
         })}
       </nav>
-
-      {/* Plan badge */}
       <div className="mt-auto px-2 pt-4 pb-1">
         <Link href="/dashboard/pricing" className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border transition hover:opacity-90 ${
           plan === 'premium' ? 'border-amber-500/30 bg-amber-500/10' :
@@ -110,15 +117,14 @@ function NotificationBell() {
 
   return (
     <div ref={ref} className="relative">
-      <button onClick={() => setOpen(v => !v)} className="relative p-3 rounded-2xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all shadow-inner">
+      <button onClick={() => setOpen(v => !v)} className="relative p-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all">
         <Bell className="w-5 h-5" />
         {notifications.length > 0 && (
-          <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-slate-950 animate-pulse" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border border-slate-950 animate-pulse" />
         )}
       </button>
-
       {open && (
-        <div className="absolute right-0 top-14 w-80 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
+        <div className="absolute right-0 top-12 w-80 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
           <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
             <p className="text-xs font-black text-white uppercase tracking-widest">Notifications</p>
             <button onClick={() => setOpen(false)}><X className="w-4 h-4 text-slate-500 hover:text-white" /></button>
@@ -146,6 +152,74 @@ function NotificationBell() {
   )
 }
 
+function ReceivableBadge() {
+  const [pending, setPending] = useState<number | null>(null)
+  const { activeBusiness } = useBusiness()
+
+  useEffect(() => {
+    const token = localStorage.getItem('moneylix_session_token')
+    if (!token) return
+    const params = new URLSearchParams()
+    if (activeBusiness) params.set('businessId', activeBusiness.id.toString())
+    fetch(`/api/dashboard/receivables?${params}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => {
+        const total = (d.receivables ?? [])
+          .filter((r: any) => r.status === 'pending')
+          .reduce((sum: number, r: any) => sum + Number(r.amount), 0)
+        setPending(total)
+      })
+      .catch(() => {})
+  }, [activeBusiness])
+
+  if (!pending || pending === 0) return null
+
+  return (
+    <Link href="/dashboard/receivables" className="flex items-center gap-1 bg-amber-500/15 border border-amber-500/30 rounded-full px-2 py-1">
+      <ClipboardList className="w-3 h-3 text-amber-400" />
+      <span className="text-[10px] font-black text-amber-400">₹{pending.toLocaleString('en-IN')}</span>
+    </Link>
+  )
+}
+
+function MobileBottomNav() {
+  const pathname = usePathname()
+  const router = useRouter()
+
+  return (
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-t border-white/10"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div className="flex items-center justify-around px-2 pt-2 pb-1">
+        {bottomNavItems.map((item, i) => {
+          const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
+          // Center FAB button placeholder
+          if (i === 2) return (
+            <div key="fab" className="flex flex-col items-center">
+              <button
+                onClick={() => router.push('/dashboard/transactions?action=add')}
+                className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 -mt-4 active:scale-95 transition-all"
+              >
+                <Plus className="w-6 h-6 text-white" />
+              </button>
+              <span className="text-[9px] text-slate-500 mt-1">Add</span>
+            </div>
+          )
+          return (
+            <Link key={item.href} href={item.href} className="flex flex-col items-center gap-1 px-3 py-1 min-w-[48px]">
+              <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-emerald-500/20' : ''}`}>
+                <item.icon className={`w-5 h-5 transition-colors ${isActive ? 'text-emerald-400' : 'text-slate-500'}`} />
+              </div>
+              <span className={`text-[9px] font-bold transition-colors ${isActive ? 'text-emerald-400' : 'text-slate-500'}`}>
+                {item.label}
+              </span>
+            </Link>
+          )
+        })}
+      </div>
+    </nav>
+  )
+}
+
 function LayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -155,8 +229,6 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setMounted(true)
     if (!localStorage.getItem('moneylix_auth')) router.push('/')
-
-    // Load username from session
     const token = localStorage.getItem('moneylix_session_token')
     if (token) {
       fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
@@ -164,13 +236,9 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
         .then(d => { if (d?.username) setUsername(d.username) })
         .catch(() => {})
     }
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return
-      if (e.key.toLowerCase() === 'a') {
-        e.preventDefault()
-        router.push('/dashboard/transactions?action=add')
-      }
+      if (e.key.toLowerCase() === 'a') { e.preventDefault(); router.push('/dashboard/transactions?action=add') }
       if (e.key === '/') {
         e.preventDefault()
         const searchInput = document.getElementById('search-input')
@@ -178,7 +246,6 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
         else { router.push('/dashboard/transactions'); setTimeout(() => document.getElementById('search-input')?.focus(), 100) }
       }
     }
-
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [router])
@@ -200,10 +267,8 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
 
       <CurrencyProvider>
         <BusinessProvider>
-          {/* Sidebar */}
+          {/* Desktop Sidebar */}
           <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-52 h-screen flex flex-col border-r border-white/10 bg-background backdrop-blur-xl transform transition-all duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}`}>
-
-            {/* Logo */}
             <div className="flex-shrink-0 px-3 py-3 flex items-center justify-between border-b border-white/5">
               <Link href="/dashboard" className="flex items-center gap-2 group">
                 <img src="/logos/moneylix-app-icon-dark.svg" alt="Moneylix" className="h-8 w-8 flex-shrink-0 group-hover:scale-105 transition-transform drop-shadow-md" />
@@ -214,8 +279,6 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
               </Link>
               <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
             </div>
-
-            {/* Scrollable middle */}
             <div className="flex-1 flex flex-col overflow-y-auto sidebar-scroll py-2">
               <div className="px-2 pb-2">
                 <div className="rounded-xl border border-white/10 bg-slate-900/50 p-1">
@@ -224,8 +287,6 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
               </div>
               <SidebarContent onClose={() => setSidebarOpen(false)} />
             </div>
-
-            {/* Logout */}
             <div className="flex-shrink-0 px-2 py-2 border-t border-white/5">
               <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all w-full">
                 <LogOut className="w-3.5 h-3.5" /><span>Logout</span>
@@ -233,38 +294,68 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
             </div>
           </aside>
 
-          {/* Main */}
+          {/* Main content */}
           <div className="flex-1 flex flex-col h-screen overflow-hidden">
-            <header className="bg-background/80 backdrop-blur-2xl sticky top-0 z-30 flex items-center justify-between px-4 lg:px-10 border-b border-white/5" style={{paddingTop: 'max(env(safe-area-inset-top), 12px)', paddingBottom: '12px'}}>
-              <div className="flex items-center gap-4">
-                <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2.5 rounded-2xl bg-white/5 text-slate-400 hover:text-white transition-colors border border-white/5"><Menu className="w-5 h-5" /></button>
-                <div className="hidden lg:flex flex-col">
-                  <p className="text-[10px] text-emerald-400 font-black uppercase tracking-[0.2em]">Live Session</p>
-                  <p className="text-lg font-black text-white tracking-tight">Financial Command Center</p>
+
+            {/* Mobile Header */}
+            <header className="lg:hidden bg-background/95 backdrop-blur-2xl sticky top-0 z-30 border-b border-white/5"
+              style={{ paddingTop: 'max(env(safe-area-inset-top), 8px)' }}>
+              <div className="flex items-center justify-between px-4 pb-3 pt-1">
+                {/* Left: Business switcher */}
+                <div className="flex items-center gap-2">
+                  <img src="/logos/moneylix-app-icon-dark.svg" alt="Moneylix" className="h-7 w-7" />
+                  <div className="max-w-[130px]">
+                    <BusinessSwitcher />
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <ThemeToggle />
-                <NotificationBell />
-                <div className="flex items-center gap-3 pl-2 border-l border-white/10">
-                   <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-500 p-[2px] shadow-lg shadow-emerald-500/20">
-                    <div className="h-full w-full rounded-[14px] bg-slate-950 flex items-center justify-center font-black text-xs text-white">
-                      {username ? username.slice(0, 2).toUpperCase() : '??'}
+                {/* Right: Receivable + Bell + Avatar */}
+                <div className="flex items-center gap-2">
+                  <ReceivableBadge />
+                  <NotificationBell />
+                  <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 p-[2px] shadow-lg">
+                    <div className="h-full w-full rounded-[10px] bg-slate-950 flex items-center justify-center font-black text-[10px] text-white">
+                      {username ? username.slice(0, 2).toUpperCase() : 'AB'}
                     </div>
-                   </div>
-                   <div className="hidden xl:block">
-                      <p className="text-xs font-black text-white capitalize">{username || 'Loading...'}</p>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Moneylix Account</p>
-                   </div>
+                  </div>
                 </div>
               </div>
             </header>
-            <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10 custom-scrollbar">
+
+            {/* Desktop Header */}
+            <header className="hidden lg:flex h-20 bg-background/80 backdrop-blur-2xl sticky top-0 z-30 items-center justify-between px-10 border-b border-white/5">
+              <div className="flex flex-col">
+                <p className="text-[10px] text-emerald-400 font-black uppercase tracking-[0.2em]">Live Session</p>
+                <p className="text-lg font-black text-white tracking-tight">Financial Command Center</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <ReceivableBadge />
+                <ThemeToggle />
+                <NotificationBell />
+                <div className="flex items-center gap-3 pl-2 border-l border-white/10">
+                  <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-500 p-[2px] shadow-lg shadow-emerald-500/20">
+                    <div className="h-full w-full rounded-[14px] bg-slate-950 flex items-center justify-center font-black text-xs text-white">
+                      {username ? username.slice(0, 2).toUpperCase() : '??'}
+                    </div>
+                  </div>
+                  <div className="hidden xl:block">
+                    <p className="text-xs font-black text-white capitalize">{username || 'Loading...'}</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Moneylix Account</p>
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            {/* Page content */}
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10 pb-24 lg:pb-10 custom-scrollbar">
               <div className="animate-fadeIn max-w-[1400px] mx-auto">
                 <ErrorBoundary>{children}</ErrorBoundary>
               </div>
             </main>
           </div>
+
+          {/* Mobile Bottom Navigation */}
+          <MobileBottomNav />
+
         </BusinessProvider>
       </CurrencyProvider>
     </div>
