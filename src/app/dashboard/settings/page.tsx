@@ -146,8 +146,8 @@ export default function SettingsPage() {
         <p className="text-[10px] text-slate-400">Manage preferences & data</p>
       </div>
 
-      {/* Quick Links — mobile only */}
-      <div className="grid grid-cols-2 gap-3 lg:hidden">
+      {/* Quick Links */}
+      <div className="grid grid-cols-2 gap-3">
         {quickLinks.map(({ href, icon: Icon, label, desc, color, bg }) => (
           <Link key={href} href={href} className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col gap-2 active:scale-95 transition-all">
             <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center`}>

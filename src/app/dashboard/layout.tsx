@@ -2,6 +2,15 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+
+function useIsNativeApp() {
+  const [isNative, setIsNative] = useState(false)
+  useEffect(() => {
+    const cap = (window as any).Capacitor
+    setIsNative(!!(cap?.isNativePlatform?.()))
+  }, [])
+  return isNative
+}
 import Link from 'next/link'
 import {
   LayoutDashboard, Receipt, Settings, LogOut, X,
@@ -222,6 +231,7 @@ function MobileBottomNav() {
 
 function LayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const isNativeApp = useIsNativeApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [username, setUsername] = useState('')
@@ -263,98 +273,108 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="h-screen overflow-hidden bg-background flex text-foreground">
-      {sidebarOpen && <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+      {sidebarOpen && !isNativeApp && <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" onClick={() => setSidebarOpen(false)} />}
 
       <CurrencyProvider>
         <BusinessProvider>
-          {/* Desktop Sidebar */}
-          <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-52 h-screen flex flex-col border-r border-white/10 bg-background backdrop-blur-xl transform transition-all duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}`}>
-            <div className="flex-shrink-0 px-3 py-3 flex items-center justify-between border-b border-white/5">
-              <Link href="/dashboard" className="flex items-center gap-2 group">
-                <img src="/logos/moneylix-app-icon-dark.svg" alt="Moneylix" className="h-8 w-8 flex-shrink-0 group-hover:scale-105 transition-transform drop-shadow-md" />
-                <div>
-                  <h1 className="text-sm font-bold leading-tight">Moneylix</h1>
-                  <p className="text-[10px] text-slate-400 leading-tight">Finance Dashboard</p>
-                </div>
-              </Link>
-              <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
-            </div>
-            <div className="flex-1 flex flex-col overflow-y-auto sidebar-scroll py-2">
-              <div className="px-2 pb-2">
-                <div className="rounded-xl border border-white/10 bg-slate-900/50 p-1">
-                  <BusinessSwitcher />
-                </div>
+
+          {/* Sidebar — website only, hidden in native app */}
+          {!isNativeApp && (
+            <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-52 h-screen flex flex-col border-r border-white/10 bg-background backdrop-blur-xl transform transition-all duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}`}>
+              <div className="flex-shrink-0 px-3 py-3 flex items-center justify-between border-b border-white/5">
+                <Link href="/dashboard" className="flex items-center gap-2 group">
+                  <img src="/logos/moneylix-app-icon-dark.svg" alt="Moneylix" className="h-8 w-8 flex-shrink-0 group-hover:scale-105 transition-transform drop-shadow-md" />
+                  <div>
+                    <h1 className="text-sm font-bold leading-tight">Moneylix</h1>
+                    <p className="text-[10px] text-slate-400 leading-tight">Finance Dashboard</p>
+                  </div>
+                </Link>
+                <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
               </div>
-              <SidebarContent onClose={() => setSidebarOpen(false)} />
-            </div>
-            <div className="flex-shrink-0 px-2 py-2 border-t border-white/5">
-              <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all w-full">
-                <LogOut className="w-3.5 h-3.5" /><span>Logout</span>
-              </button>
-            </div>
-          </aside>
+              <div className="flex-1 flex flex-col overflow-y-auto sidebar-scroll py-2">
+                <div className="px-2 pb-2">
+                  <div className="rounded-xl border border-white/10 bg-slate-900/50 p-1">
+                    <BusinessSwitcher />
+                  </div>
+                </div>
+                <SidebarContent onClose={() => setSidebarOpen(false)} />
+              </div>
+              <div className="flex-shrink-0 px-2 py-2 border-t border-white/5">
+                <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all w-full">
+                  <LogOut className="w-3.5 h-3.5" /><span>Logout</span>
+                </button>
+              </div>
+            </aside>
+          )}
 
           {/* Main content */}
           <div className="flex-1 flex flex-col h-screen overflow-hidden">
 
-            {/* Mobile Header */}
-            <header className="lg:hidden bg-background/95 backdrop-blur-2xl sticky top-0 z-30 border-b border-white/5"
-              style={{ paddingTop: 'max(env(safe-area-inset-top), 8px)' }}>
-              <div className="flex items-center justify-between px-4 pb-3 pt-1">
-                {/* Left: Business switcher */}
-                <div className="flex items-center gap-2">
-                  <img src="/logos/moneylix-app-icon-dark.svg" alt="Moneylix" className="h-7 w-7" />
-                  <div className="max-w-[130px]">
-                    <BusinessSwitcher />
+            {/* Native App Header — only in Capacitor */}
+            {isNativeApp && (
+              <header className="bg-background/95 backdrop-blur-2xl sticky top-0 z-30 border-b border-white/5"
+                style={{ paddingTop: 'max(env(safe-area-inset-top), 8px)' }}>
+                <div className="flex items-center justify-between px-4 pb-3 pt-1">
+                  <div className="flex items-center gap-2">
+                    <img src="/logos/moneylix-app-icon-dark.svg" alt="Moneylix" className="h-7 w-7" />
+                    <div className="max-w-[130px]">
+                      <BusinessSwitcher />
+                    </div>
                   </div>
-                </div>
-                {/* Right: Receivable + Bell + Avatar */}
-                <div className="flex items-center gap-2">
-                  <ReceivableBadge />
-                  <NotificationBell />
-                  <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 p-[2px] shadow-lg">
-                    <div className="h-full w-full rounded-[10px] bg-slate-950 flex items-center justify-center font-black text-[10px] text-white">
-                      {username ? username.slice(0, 2).toUpperCase() : 'AB'}
+                  <div className="flex items-center gap-2">
+                    <ReceivableBadge />
+                    <NotificationBell />
+                    <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 p-[2px] shadow-lg">
+                      <div className="h-full w-full rounded-[10px] bg-slate-950 flex items-center justify-center font-black text-[10px] text-white">
+                        {username ? username.slice(0, 2).toUpperCase() : 'AB'}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </header>
+              </header>
+            )}
 
-            {/* Desktop Header */}
-            <header className="hidden lg:flex h-20 bg-background/80 backdrop-blur-2xl sticky top-0 z-30 items-center justify-between px-10 border-b border-white/5">
-              <div className="flex flex-col">
-                <p className="text-[10px] text-emerald-400 font-black uppercase tracking-[0.2em]">Live Session</p>
-                <p className="text-lg font-black text-white tracking-tight">Financial Command Center</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <ReceivableBadge />
-                <ThemeToggle />
-                <NotificationBell />
-                <div className="flex items-center gap-3 pl-2 border-l border-white/10">
-                  <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-500 p-[2px] shadow-lg shadow-emerald-500/20">
-                    <div className="h-full w-full rounded-[14px] bg-slate-950 flex items-center justify-center font-black text-xs text-white">
-                      {username ? username.slice(0, 2).toUpperCase() : '??'}
-                    </div>
-                  </div>
-                  <div className="hidden xl:block">
-                    <p className="text-xs font-black text-white capitalize">{username || 'Loading...'}</p>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Moneylix Account</p>
+            {/* Website Header — only on web */}
+            {!isNativeApp && (
+              <header className="h-20 bg-background/80 backdrop-blur-2xl sticky top-0 z-30 flex items-center justify-between px-6 lg:px-10 border-b border-white/5">
+                <div className="flex items-center gap-4">
+                  <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2.5 rounded-2xl bg-white/5 text-slate-400 hover:text-white transition-colors border border-white/5">
+                    <LayoutDashboard className="w-5 h-5" />
+                  </button>
+                  <div className="hidden lg:flex flex-col">
+                    <p className="text-[10px] text-emerald-400 font-black uppercase tracking-[0.2em]">Live Session</p>
+                    <p className="text-lg font-black text-white tracking-tight">Financial Command Center</p>
                   </div>
                 </div>
-              </div>
-            </header>
+                <div className="flex items-center gap-4">
+                  <ReceivableBadge />
+                  <ThemeToggle />
+                  <NotificationBell />
+                  <div className="flex items-center gap-3 pl-2 border-l border-white/10">
+                    <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-500 p-[2px] shadow-lg shadow-emerald-500/20">
+                      <div className="h-full w-full rounded-[14px] bg-slate-950 flex items-center justify-center font-black text-xs text-white">
+                        {username ? username.slice(0, 2).toUpperCase() : '??'}
+                      </div>
+                    </div>
+                    <div className="hidden xl:block">
+                      <p className="text-xs font-black text-white capitalize">{username || 'Loading...'}</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Moneylix Account</p>
+                    </div>
+                  </div>
+                </div>
+              </header>
+            )}
 
             {/* Page content */}
-            <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10 pb-24 lg:pb-10 custom-scrollbar">
+            <main className={`flex-1 overflow-y-auto p-4 md:p-6 lg:p-10 custom-scrollbar ${isNativeApp ? 'pb-24' : 'pb-4 lg:pb-10'}`}>
               <div className="animate-fadeIn max-w-[1400px] mx-auto">
                 <ErrorBoundary>{children}</ErrorBoundary>
               </div>
             </main>
           </div>
 
-          {/* Mobile Bottom Navigation */}
-          <MobileBottomNav />
+          {/* Bottom Nav — native app only */}
+          {isNativeApp && <MobileBottomNav />}
 
         </BusinessProvider>
       </CurrencyProvider>
