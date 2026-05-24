@@ -241,10 +241,10 @@ export default function LandingPage() {
           <div className="absolute bottom-0 right-0 w-[700px] h-[700px] bg-cyan-500/5 rounded-full blur-[160px]" />
         </div>
 
-        <div className="w-full max-w-7xl mx-auto px-6 lg:px-10 pt-20 pb-10 lg:py-0 grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-10 lg:gap-0 items-stretch min-h-screen">
+        <div className="w-full max-w-7xl mx-auto px-6 lg:px-10 pt-20 pb-10 lg:py-16 grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-10 lg:gap-16 items-center">
 
           {/* Left — text */}
-          <div className="flex flex-col justify-center space-y-8 relative z-10 lg:py-32">
+          <div className="flex flex-col justify-center space-y-8 relative z-10">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold w-fit">
               <Star className="w-3.5 h-3.5" />
               Made for Indian Freelancers &amp; SMBs
@@ -279,14 +279,14 @@ export default function LandingPage() {
           </div>
 
           {/* Right — Phone fills the column */}
-          <div className="relative flex items-center justify-center lg:justify-end lg:pr-0 lg:py-10">
+          <div className="relative flex items-center justify-center lg:justify-end lg:pr-0">
             {/* Glow behind phone */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="w-[420px] h-[420px] bg-emerald-500/8 rounded-full blur-[100px]" />
             </div>
 
             {/* Phone frame */}
-            <div className="relative z-10 w-[340px] lg:w-[380px] xl:w-[420px]">
+            <div className="relative z-10 w-[300px] lg:w-[340px] xl:w-[380px]">
               <div className="relative w-full" style={{paddingBottom: '210%'}}>
                 <div className="absolute inset-0 bg-[#0d1321] rounded-[52px] border-[5px] border-slate-600/70 shadow-[0_80px_160px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] overflow-hidden">
                   {/* Notch */}
