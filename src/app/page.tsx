@@ -234,31 +234,29 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ── */}
-      <section className="relative min-h-screen flex items-center pt-24 pb-16 px-6 lg:px-10 overflow-hidden">
-        <div className="absolute top-0 inset-x-0 h-full pointer-events-none overflow-hidden">
-          <div className="absolute top-1/4 -left-40 w-[800px] h-[800px] bg-emerald-500/5 rounded-full blur-[160px]" />
-          <div className="absolute top-1/3 right-0 w-[600px] h-[600px] bg-cyan-500/4 rounded-full blur-[140px]" />
-          <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
+      <section className="relative min-h-screen flex items-center overflow-hidden">
+        {/* Background glows */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 -left-40 w-[900px] h-[900px] bg-emerald-500/6 rounded-full blur-[180px]" />
+          <div className="absolute bottom-0 right-0 w-[700px] h-[700px] bg-cyan-500/5 rounded-full blur-[160px]" />
         </div>
 
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="w-full max-w-7xl mx-auto px-6 lg:px-10 pt-20 pb-10 lg:py-0 grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-10 lg:gap-0 items-stretch min-h-screen">
 
-          {/* Left */}
-          <div className="space-y-8 relative z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
+          {/* Left — text */}
+          <div className="flex flex-col justify-center space-y-8 relative z-10 lg:py-32">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold w-fit">
               <Star className="w-3.5 h-3.5" />
               Made for Indian Freelancers &amp; SMBs
             </div>
 
-            <div className="space-y-3">
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[0.92] tracking-tight">
-                <span className="text-white">Manage your</span>
-                <br />
-                <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">money smarter.</span>
-              </h1>
-            </div>
+            <h1 className="text-5xl md:text-6xl lg:text-[4.5rem] xl:text-[5.5rem] font-black leading-[0.9] tracking-tight">
+              <span className="text-white">Manage your</span>
+              <br />
+              <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">money smarter.</span>
+            </h1>
 
-            <p className="text-lg text-slate-400 leading-relaxed max-w-md">
+            <p className="text-lg lg:text-xl text-slate-400 leading-relaxed max-w-lg">
               Track income, manage expenses, follow up on receivables, and get AI-powered investment advice — all in one beautifully simple app.
             </p>
 
@@ -273,107 +271,115 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="flex items-center gap-6 text-xs text-slate-500 font-medium pt-2">
+            <div className="flex flex-wrap items-center gap-5 text-xs text-slate-500 font-medium">
               <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> Free forever plan</span>
               <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> No credit card needed</span>
               <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-emerald-500" /> SSL secured</span>
             </div>
           </div>
 
-          {/* Right — Phone mockup */}
-          <div className="flex items-center justify-center lg:justify-end relative">
-            <div className="relative w-[300px]">
-              <div className="relative w-full h-[620px] bg-[#0d1321] rounded-[48px] border-[5px] border-slate-700/80 shadow-[0_60px_120px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.05)] overflow-hidden">
-                {/* Notch */}
-                <div className="absolute top-0 inset-x-0 h-9 bg-[#0d1321] flex items-center justify-center z-10">
-                  <div className="w-28 h-6 bg-slate-800 rounded-full" />
-                </div>
-                {/* Status bar */}
-                <div className="absolute top-2 inset-x-0 px-6 flex items-center justify-between z-10">
-                  <span className="text-[10px] text-white font-bold">9:41</span>
-                  <div className="flex items-center gap-1">
-                    <div className="flex gap-0.5 items-end">
-                      {[3,5,7,9].map(h => <div key={h} className="w-1 bg-white rounded-sm" style={{height:`${h}px`}} />)}
-                    </div>
-                    <div className="w-6 h-3 rounded border border-white/40 p-0.5 ml-1">
-                      <div className="w-full h-full bg-white rounded-sm" />
+          {/* Right — Phone fills the column */}
+          <div className="relative flex items-center justify-center lg:justify-end lg:pr-0 lg:py-10">
+            {/* Glow behind phone */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-[420px] h-[420px] bg-emerald-500/8 rounded-full blur-[100px]" />
+            </div>
+
+            {/* Phone frame */}
+            <div className="relative z-10 w-[340px] lg:w-[380px] xl:w-[420px]">
+              <div className="relative w-full" style={{paddingBottom: '210%'}}>
+                <div className="absolute inset-0 bg-[#0d1321] rounded-[52px] border-[5px] border-slate-600/70 shadow-[0_80px_160px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] overflow-hidden">
+                  {/* Notch */}
+                  <div className="absolute top-0 inset-x-0 h-9 bg-[#0d1321] flex items-center justify-center z-10">
+                    <div className="w-32 h-7 bg-slate-800 rounded-full" />
+                  </div>
+                  {/* Status bar */}
+                  <div className="absolute top-2 inset-x-0 px-6 flex items-center justify-between z-10">
+                    <span className="text-[11px] text-white font-bold">9:41</span>
+                    <div className="flex items-center gap-1">
+                      <div className="flex gap-0.5 items-end">
+                        {[3,5,7,9].map(h => <div key={h} className="w-1 bg-white rounded-sm" style={{height:`${h}px`}} />)}
+                      </div>
+                      <div className="w-6 h-3 rounded border border-white/40 p-0.5 ml-1">
+                        <div className="w-full h-full bg-white rounded-sm" />
+                      </div>
                     </div>
                   </div>
-                </div>
-                {/* Content */}
-                <div className="absolute top-9 inset-x-0 bottom-14 bg-[#0d1117] px-4 py-3 space-y-3 overflow-hidden">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.15em]">Dashboard</p>
-                  <div className="rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/10 border border-emerald-500/25 p-4">
-                    <p className="text-[9px] text-slate-400">Total Balance</p>
-                    <p className="text-2xl font-black text-white mt-0.5 tracking-tight">₹1,45,230</p>
-                    <p className="text-[9px] text-emerald-400 font-bold mt-0.5">↑ +12.5% vs last month</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-2.5">
-                      <p className="text-[8px] text-slate-400">Income</p>
-                      <p className="text-sm font-black text-emerald-400">₹2,35,000</p>
+                  {/* Screen content */}
+                  <div className="absolute top-9 inset-x-0 bottom-16 bg-[#0d1117] px-5 py-4 space-y-4 overflow-hidden">
+                    <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.15em]">Dashboard</p>
+                    <div className="rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/10 border border-emerald-500/25 p-5">
+                      <p className="text-[10px] text-slate-400">Total Balance</p>
+                      <p className="text-3xl font-black text-white mt-1 tracking-tight">₹1,45,230</p>
+                      <p className="text-[10px] text-emerald-400 font-bold mt-1">↑ +12.5% vs last month</p>
                     </div>
-                    <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-2.5">
-                      <p className="text-[8px] text-slate-400">Expenses</p>
-                      <p className="text-sm font-black text-rose-400">₹89,770</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3">
+                        <p className="text-[9px] text-slate-400">Income</p>
+                        <p className="text-base font-black text-emerald-400">₹2,35,000</p>
+                      </div>
+                      <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-3">
+                        <p className="text-[9px] text-slate-400">Expenses</p>
+                        <p className="text-base font-black text-rose-400">₹89,770</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="rounded-xl bg-slate-800/60 border border-white/5 p-3">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-[10px] text-white font-bold">Cash Flow</span>
-                      <span className="text-[8px] text-slate-500">May 2026</span>
+                    <div className="rounded-xl bg-slate-800/60 border border-white/5 p-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-[11px] text-white font-bold">Cash Flow</span>
+                        <span className="text-[9px] text-slate-500">May 2026</span>
+                      </div>
+                      <div className="flex items-end gap-0.5 h-16">
+                        {[30,45,35,60,45,70,55,80,65,75,90,85].map((h,i) => (
+                          <div key={i} className="flex-1 rounded-t-sm"
+                            style={{height:`${h}%`, background: i >= 9 ? '#10b981' : 'rgba(16,185,129,0.2)'}} />
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex items-end gap-0.5 h-12">
-                      {[30,45,35,60,45,70,55,80,65,75,90,85].map((h,i) => (
-                        <div key={i} className="flex-1 rounded-t-sm"
-                          style={{height:`${h}%`, background: i >= 9 ? '#10b981' : 'rgba(16,185,129,0.2)'}} />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="rounded-xl bg-slate-800/60 border border-white/5 p-3">
-                    <p className="text-[9px] text-white font-bold mb-2">By Category</p>
-                    <div className="space-y-1.5">
-                      {[
-                        {name:'Office', pct:40, color:'bg-cyan-500'},
-                        {name:'Marketing', pct:27, color:'bg-violet-500'},
-                        {name:'Travel', pct:20, color:'bg-amber-500'},
-                      ].map(c => (
-                        <div key={c.name} className="flex items-center gap-2">
-                          <div className={`w-1.5 h-1.5 rounded-full ${c.color}`} />
-                          <span className="text-[8px] text-slate-400 flex-1">{c.name}</span>
-                          <div className="w-16 h-1 bg-slate-700 rounded-full">
-                            <div className={`h-full ${c.color} rounded-full`} style={{width:`${c.pct}%`}} />
+                    <div className="rounded-xl bg-slate-800/60 border border-white/5 p-4">
+                      <p className="text-[10px] text-white font-bold mb-3">By Category</p>
+                      <div className="space-y-2.5">
+                        {[
+                          {name:'Office Supplies', pct:40, color:'bg-cyan-500'},
+                          {name:'Marketing', pct:27, color:'bg-violet-500'},
+                          {name:'Travel', pct:20, color:'bg-amber-500'},
+                        ].map(c => (
+                          <div key={c.name} className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${c.color} flex-shrink-0`} />
+                            <span className="text-[9px] text-slate-400 flex-1">{c.name}</span>
+                            <div className="w-20 h-1.5 bg-slate-700 rounded-full">
+                              <div className={`h-full ${c.color} rounded-full`} style={{width:`${c.pct}%`}} />
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-                {/* Bottom nav */}
-                <div className="absolute bottom-0 inset-x-0 h-14 bg-[#0d1321] border-t border-white/5 flex items-center justify-around px-3">
-                  {['Home','Txns','Overall','AI','More'].map((l, i) => (
-                    <div key={l} className="flex flex-col items-center gap-0.5">
-                      <div className={`w-5 h-5 rounded-lg ${i===0 ? 'bg-emerald-500/30' : 'bg-slate-800'}`} />
-                      <span className={`text-[7px] font-bold ${i===0 ? 'text-emerald-400' : 'text-slate-600'}`}>{l}</span>
-                    </div>
-                  ))}
+                  {/* Bottom nav */}
+                  <div className="absolute bottom-0 inset-x-0 h-16 bg-[#0d1321] border-t border-white/5 flex items-center justify-around px-4">
+                    {['Home','Txns','Overall','AI','More'].map((l, i) => (
+                      <div key={l} className="flex flex-col items-center gap-1">
+                        <div className={`w-6 h-6 rounded-lg ${i===0 ? 'bg-emerald-500/30' : 'bg-slate-800'}`} />
+                        <span className={`text-[8px] font-bold ${i===0 ? 'text-emerald-400' : 'text-slate-600'}`}>{l}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Floating cards */}
-              <div className="absolute -right-16 top-20 bg-[#131c2e]/95 backdrop-blur border border-white/10 rounded-2xl p-3.5 shadow-2xl w-36">
+              {/* Floating stat badges — tucked inside the phone width */}
+              <div className="absolute right-0 top-16 translate-x-1/3 bg-[#131c2e]/95 backdrop-blur border border-white/10 rounded-2xl p-4 shadow-2xl w-40 z-20">
                 <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Monthly Growth</p>
-                <p className="text-emerald-400 font-black text-xl mt-1">+12.5%</p>
-                <div className="flex items-end gap-0.5 h-5 mt-2">
+                <p className="text-emerald-400 font-black text-2xl mt-1">+12.5%</p>
+                <div className="flex items-end gap-0.5 h-6 mt-2">
                   {[3,5,4,7,6,8,10].map((h,i) => (
-                    <div key={i} className="flex-1 bg-emerald-500 rounded-sm opacity-70" style={{height:`${h*1.8}px`}} />
+                    <div key={i} className="flex-1 bg-emerald-500 rounded-sm opacity-70" style={{height:`${h*2}px`}} />
                   ))}
                 </div>
               </div>
 
-              <div className="absolute -left-16 bottom-40 bg-[#131c2e]/95 backdrop-blur border border-white/10 rounded-2xl p-3.5 shadow-2xl w-40">
+              <div className="absolute left-0 bottom-36 -translate-x-1/3 bg-[#131c2e]/95 backdrop-blur border border-white/10 rounded-2xl p-4 shadow-2xl w-44 z-20">
                 <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Net Profit</p>
-                <p className="text-cyan-400 font-black text-lg mt-1">₹1,45,230</p>
+                <p className="text-cyan-400 font-black text-xl mt-1">₹1,45,230</p>
                 <p className="text-[9px] text-emerald-400 font-semibold mt-1">↑ Positive cash flow</p>
               </div>
             </div>
@@ -382,19 +388,19 @@ export default function LandingPage() {
       </section>
 
       {/* ── STATS BAR ── */}
-      <section className="border-y border-white/5 bg-white/[0.02] py-10 px-6 lg:px-10">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+      <section className="border-y border-white/5 bg-white/[0.02] py-14 px-6 lg:px-10">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
           {stats.map(({ value, label }) => (
             <div key={label} className="text-center">
-              <p className="text-3xl font-black text-white">{value}</p>
-              <p className="text-xs text-slate-500 font-semibold mt-1">{label}</p>
+              <p className="text-4xl font-black text-white">{value}</p>
+              <p className="text-sm text-slate-500 font-semibold mt-2">{label}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* ── FEATURE SECTIONS (alternating) ── */}
-      <section id="features" className="py-8">
+      <section id="features" className="py-4">
         {featureSections.map((feat, i) => {
           const colorMap: Record<string, { tag: string; bullet: string; border: string; bg: string }> = {
             emerald: { tag: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', bullet: 'text-emerald-400', border: 'border-emerald-500/20', bg: 'bg-emerald-500/5' },
@@ -406,8 +412,8 @@ export default function LandingPage() {
           const isEven = i % 2 === 1
 
           return (
-            <div key={i} className={`py-20 px-6 lg:px-10 ${i % 2 === 1 ? 'bg-white/[0.015]' : ''} border-b border-white/5`}>
-              <div className={`max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center ${isEven ? 'lg:flex-row-reverse' : ''}`}
+            <div key={i} className={`py-28 px-6 lg:px-10 ${i % 2 === 1 ? 'bg-white/[0.015]' : ''} border-b border-white/5`}>
+              <div className={`max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center ${isEven ? 'lg:flex-row-reverse' : ''}`}
                 style={isEven ? {direction: 'rtl'} : {}}>
 
                 {/* Text */}
@@ -415,7 +421,7 @@ export default function LandingPage() {
                   <span className={`inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-full border ${c.tag}`}>
                     {feat.tag}
                   </span>
-                  <h2 className="text-4xl md:text-5xl font-black leading-tight text-white">
+                  <h2 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight text-white">
                     {feat.title}
                   </h2>
                   <p className="text-lg text-slate-400 leading-relaxed max-w-md">
