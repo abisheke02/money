@@ -126,7 +126,7 @@ function NotificationBell() {
 
   return (
     <div ref={ref} className="relative">
-      <button onClick={() => setOpen(v => !v)} className="relative p-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all">
+      <button onClick={() => setOpen(v => !v)} className="relative p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
         <Bell className="w-5 h-5" />
         {notifications.length > 0 && (
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border border-slate-950 animate-pulse" />
@@ -313,7 +313,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
             {/* Native App Header — only in Capacitor */}
             {isNativeApp && (
               <header className="bg-background/95 backdrop-blur-2xl sticky top-0 z-30 border-b border-white/5"
-                style={{ paddingTop: 'max(env(safe-area-inset-top), 8px)' }}>
+                style={{ paddingTop: 'max(env(safe-area-inset-top), 16px)' }}>
                 <div className="flex items-center justify-between px-4 pb-3 pt-1">
                   <div className="flex items-center gap-2">
                     <img src="/logos/moneylix-app-icon-dark.svg" alt="Moneylix" className="h-7 w-7" />
@@ -321,10 +321,10 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
                       <BusinessSwitcher />
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
                     <ReceivableBadge />
                     <NotificationBell />
-                    <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 p-[2px] shadow-lg">
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 p-[2px] shadow-lg flex-shrink-0">
                       <div className="h-full w-full rounded-[10px] bg-slate-950 flex items-center justify-center font-black text-[10px] text-white">
                         {username ? username.slice(0, 2).toUpperCase() : 'AB'}
                       </div>
@@ -336,7 +336,8 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
 
             {/* Website Header — only on web */}
             {!isNativeApp && (
-              <header className="h-20 bg-background/80 backdrop-blur-2xl sticky top-0 z-30 flex items-center justify-between px-6 lg:px-10 border-b border-white/5">
+              <header className="bg-background/80 backdrop-blur-2xl sticky top-0 z-30 flex items-center justify-between px-6 lg:px-10 border-b border-white/5 py-4 lg:py-6"
+                style={{ paddingTop: 'max(env(safe-area-inset-top), 16px)' }}>
                 <div className="flex items-center gap-4">
                   <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2.5 rounded-2xl bg-white/5 text-slate-400 hover:text-white transition-colors border border-white/5">
                     <LayoutDashboard className="w-5 h-5" />

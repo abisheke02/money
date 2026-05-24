@@ -219,59 +219,101 @@ export default function TransactionsPage() {
               <Button variant="outline" size="sm" onClick={() => setShowModal(true)}>Add Transaction</Button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-separate border-spacing-y-2 px-4 py-2">
-                <thead className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">
-                  <tr>
-                    <th className="px-4 py-4 text-left w-10"><button onClick={toggleSelectAll} className="p-2 hover:bg-white/5 rounded-xl transition"><Check className={cn("w-4 h-4", selectedIds.length === transactions.length ? "text-primary" : "text-slate-600")} /></button></th>
-                    <th className="px-4 py-4 text-left">Timestamp</th>
-                    <th className="px-4 py-4 text-left">Description</th>
-                    <th className="px-4 py-4 text-left">Category</th>
-                    <th className="px-4 py-4 text-left">Method</th>
-                    <th className="px-4 py-4 text-right">Amount</th>
-                    <th className="px-4 py-4"></th>
-                  </tr>
-                </thead>
-                <tbody className="">
-                  {transactions.map((tx: Transaction) => (
-                    <tr key={tx.id} className="group bg-slate-900/40 hover:bg-slate-800/60 transition-all duration-300 shadow-sm">
-                      <td className="px-4 py-4 rounded-l-2xl"><button onClick={() => toggleSelect(tx.id)} className="p-2 hover:bg-white/5 rounded-xl transition"><Check className={cn("w-4 h-4", selectedIds.includes(tx.id) ? "text-primary" : "text-slate-600/50 group-hover:text-slate-600")} /></button></td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm font-bold text-white font-mono">{new Date(tx.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</div>
-                        <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{new Date(tx.date).getFullYear()}</div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="text-sm font-black text-white truncate max-w-[200px] group-hover:text-primary transition-colors">{tx.note || tx.category?.name || '—'}</div>
-                        {tx.tags && <div className="flex gap-1 mt-1">{tx.tags.split(',').map(tag => <span key={tag} className="text-[9px] px-1.5 py-0.5 rounded-md bg-white/5 text-slate-500 border border-white/5 font-bold">#{tag.trim()}</span>)}</div>}
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full shadow-lg" style={{ backgroundColor: tx.category?.color || '#ccc' }} />
-                          <span className="text-sm text-slate-300 font-bold">{tx.category?.name || 'Uncategorized'}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                         <Badge variant={tx.type as any} className="font-black text-[10px] uppercase">{tx.method || 'Cash'}</Badge>
-                      </td>
-                      <td className={cn("px-4 py-4 text-right font-black text-base font-mono tabular-nums", tx.type === 'credit' ? "text-emerald-400" : "text-rose-400")}>
-                        {tx.type === 'credit' ? '+' : '-'}{fmt(tx.amount)}
-                      </td>
-                      <td className="px-4 py-4 text-right rounded-r-2xl">
-                        <div className="flex gap-1 justify-end opacity-0 group-hover:opacity-100 transition-all">
-                          <button onClick={() => handleEdit(tx)} className="p-2.5 text-slate-500 hover:text-white hover:bg-white/10 rounded-xl transition"><Edit2 className="w-4 h-4" /></button>
-                          <button onClick={() => handleDelete(tx)} className="p-2.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition"><Trash2 className="w-4 h-4" /></button>
-                        </div>
-                      </td>
+            <div className="space-y-4">
+              {/* Desktop Table View */}
+              <div className="overflow-x-auto hidden lg:block">
+                <table className="w-full border-separate border-spacing-y-2 px-4 py-2">
+                  <thead className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                    <tr>
+                      <th className="px-4 py-4 text-left w-10"><button onClick={toggleSelectAll} className="p-2 hover:bg-white/5 rounded-xl transition"><Check className={cn("w-4 h-4", selectedIds.length === transactions.length ? "text-primary" : "text-slate-600")} /></button></th>
+                      <th className="px-4 py-4 text-left">Timestamp</th>
+                      <th className="px-4 py-4 text-left">Description</th>
+                      <th className="px-4 py-4 text-left">Category</th>
+                      <th className="px-4 py-4 text-left">Method</th>
+                      <th className="px-4 py-4 text-right">Amount</th>
+                      <th className="px-4 py-4"></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="">
+                    {transactions.map((tx: Transaction) => (
+                      <tr key={tx.id} className="group bg-slate-900/40 hover:bg-slate-800/60 transition-all duration-300 shadow-sm">
+                        <td className="px-4 py-4 rounded-l-2xl"><button onClick={() => toggleSelect(tx.id)} className="p-2 hover:bg-white/5 rounded-xl transition"><Check className={cn("w-4 h-4", selectedIds.includes(tx.id) ? "text-primary" : "text-slate-600/50 group-hover:text-slate-600")} /></button></td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm font-bold text-white font-mono">{new Date(tx.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</div>
+                          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{new Date(tx.date).getFullYear()}</div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="text-sm font-black text-white truncate max-w-[200px] group-hover:text-primary transition-colors">{tx.note || tx.category?.name || '—'}</div>
+                          {tx.tags && <div className="flex gap-1 mt-1">{tx.tags.split(',').map(tag => <span key={tag} className="text-[9px] px-1.5 py-0.5 rounded-md bg-white/5 text-slate-500 border border-white/5 font-bold">#{tag.trim()}</span>)}</div>}
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full shadow-lg" style={{ backgroundColor: tx.category?.color || '#ccc' }} />
+                            <span className="text-sm text-slate-300 font-bold">{tx.category?.name || 'Uncategorized'}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                           <Badge variant={tx.type as any} className="font-black text-[10px] uppercase">{tx.method || 'Cash'}</Badge>
+                        </td>
+                        <td className={cn("px-4 py-4 text-right font-black text-base font-mono tabular-nums", tx.type === 'credit' ? "text-emerald-400" : "text-rose-400")}>
+                          {tx.type === 'credit' ? '+' : '-'}{fmt(tx.amount)}
+                        </td>
+                        <td className="px-4 py-4 text-right rounded-r-2xl">
+                          <div className="flex gap-1 justify-end opacity-0 group-hover:opacity-100 transition-all">
+                            <button onClick={() => handleEdit(tx)} className="p-2.5 text-slate-500 hover:text-white hover:bg-white/10 rounded-xl transition"><Edit2 className="w-4 h-4" /></button>
+                            <button onClick={() => handleDelete(tx)} className="p-2.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition"><Trash2 className="w-4 h-4" /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile List View - Single Page Layout, No Horizontal Scroll */}
+              <div className="block lg:hidden divide-y divide-white/5 px-1 space-y-1.5">
+                {transactions.map((tx: Transaction) => (
+                  <div key={tx.id} className="py-2 px-2.5 bg-slate-900/40 rounded-xl border border-white/5 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {/* Type dot */}
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${tx.type === 'credit' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+
+                      {/* Date */}
+                      <div className="flex-shrink-0 text-center w-8">
+                        <div className="text-[10px] font-black text-white font-mono leading-tight">{new Date(tx.date).toLocaleDateString('en-GB', { day: '2-digit' })}</div>
+                        <div className="text-[8px] text-slate-500 font-bold uppercase leading-tight">{new Date(tx.date).toLocaleDateString('en-GB', { month: 'short' })}</div>
+                      </div>
+
+                      {/* Note + category */}
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-bold text-white truncate">{tx.note || tx.category?.name || '—'}</div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: tx.category?.color || '#ccc' }} />
+                          <span className="text-[9px] text-slate-500 truncate">{tx.category?.name || 'Uncategorized'}</span>
+                          <span className="text-[8px] text-slate-600 uppercase">· {tx.method || 'cash'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Amount & Actions */}
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <div className={cn("font-black text-xs font-mono tabular-nums", tx.type === 'credit' ? "text-emerald-400" : "text-rose-400")}>
+                        {tx.type === 'credit' ? '+' : '-'}{fmt(tx.amount)}
+                      </div>
+                      <button onClick={() => handleEdit(tx)} className="p-1.5 text-slate-600 hover:text-white rounded-lg transition-colors"><Edit2 className="w-3 h-3" /></button>
+                      <button onClick={() => handleDelete(tx)} className="p-1.5 text-slate-600 hover:text-rose-400 rounded-lg transition-colors"><Trash2 className="w-3 h-3" /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination controls (Universal) */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between px-8 py-6 border-t border-white/5 bg-black/20 backdrop-blur-md">
+                <div className="flex items-center justify-between px-6 py-4 border-t border-white/5 bg-black/20 rounded-b-[32px]">
                   <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Page <span className="text-white">{filters.page}</span> of {totalPages}</span>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setFilters(f => ({ ...f, page: f.page - 1 }))} disabled={filters.page === 1} className="px-4 rounded-xl border-white/5"><ChevronLeft className="w-4 h-4" /></Button>
-                    <Button variant="outline" size="sm" onClick={() => setFilters(f => ({ ...f, page: f.page + 1 }))} disabled={filters.page === totalPages} className="px-4 rounded-xl border-white/5"><ChevronRight className="w-4 h-4" /></Button>
+                    <Button variant="outline" size="sm" onClick={() => setFilters(f => ({ ...f, page: f.page - 1 }))} disabled={filters.page === 1} className="px-3 rounded-xl border-white/5"><ChevronLeft className="w-4 h-4" /></Button>
+                    <Button variant="outline" size="sm" onClick={() => setFilters(f => ({ ...f, page: f.page + 1 }))} disabled={filters.page === totalPages} className="px-3 rounded-xl border-white/5"><ChevronRight className="w-4 h-4" /></Button>
                   </div>
                 </div>
               )}
