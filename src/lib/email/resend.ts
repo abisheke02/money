@@ -77,9 +77,9 @@ export async function sendPlanUpgradeEmail(to: string, plan: string, expiry: Dat
       <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0f172a; color: #ffffff; padding: 40px; border-radius: 16px; border: 1px solid #334155;">
         <h1 style="color: #10b981; margin-bottom: 24px;">Payment Successful!</h1>
         <p style="font-size: 16px; line-height: 1.5; color: #cbd5e1;">
-          Thank you for trusting Moneylix. Your account has successfully been upgraded to the <strong>\${plan.toUpperCase()}</strong> tier.
+          Thank you for trusting Moneylix. Your account has successfully been upgraded to the <strong>${plan.toUpperCase()}</strong> tier.
           <br /><br />
-          Next billing date: <strong>\${expiry.toLocaleDateString()}</strong>
+          Next billing date: <strong>${expiry.toLocaleDateString()}</strong>
         </p>
       </div>
     `
