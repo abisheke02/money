@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { AlertCircle, Clock, ArrowRight, TrendingUp, TrendingDown, Wallet, Target, Search, Bell, X, Crown } from 'lucide-react'
+import { AlertCircle, ArrowRight, TrendingUp, TrendingDown, Wallet, Target, Search, Crown } from 'lucide-react'
 import Link from 'next/link'
 import { useBusiness } from '@/lib/contexts/BusinessContext'
 import { useCurrency } from '@/lib/contexts/CurrencyContext'
@@ -22,7 +22,6 @@ export default function DashboardPage() {
   const [categorySpend, setCategorySpend] = useState<CategorySpend[]>([])
   const [dailyCashflow, setDailyCashflow] = useState<DailyCashflow[]>([])
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([])
-  const [reminders, setReminders] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const { currentCurrency, currencies, loading: currencyLoading } = useCurrency()
 
@@ -33,26 +32,18 @@ export default function DashboardPage() {
       const bId = activeBusiness.id
       const token = localStorage.getItem('moneylix_session_token') ?? ''
       const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
-      const [summaryRes, chartsRes, transactionsRes, remindersRes] = await Promise.all([
+      const [summaryRes, chartsRes, transactionsRes] = await Promise.all([
         fetch(`/api/dashboard?businessId=${bId}`, { headers: authHeaders }),
         fetch(`/api/charts?businessId=${bId}`, { headers: authHeaders }),
         fetch(`/api/transactions?limit=6&sortBy=date&sortOrder=desc&businessId=${bId}`, { headers: authHeaders }),
-        fetch(`/api/transactions?businessId=${bId}&limit=100`, { headers: authHeaders })
       ])
       const summaryData = await summaryRes.json()
       const chartsData = await chartsRes.json()
       const transactionsData = await transactionsRes.json()
-      const remindersData = await remindersRes.json()
       setSummary(summaryData)
       setCategorySpend(chartsData.categorySpend || [])
       setDailyCashflow(chartsData.dailyCashflow || [])
       setRecentTransactions(transactionsData.transactions || [])
-      const now = new Date()
-      setReminders((remindersData.transactions || []).filter((tx: Transaction) => {
-        if (!tx.due_date) return false
-        const diff = Math.ceil((new Date(tx.due_date).getTime() - now.getTime()) / 86400000)
-        return diff >= 0 && diff <= (tx.reminder_days || 3)
-      }))
     } catch (e) {
       console.error(e)
     } finally {
@@ -260,48 +251,80 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] border-separate border-spacing-y-4">
-            <thead>
-              <tr className="text-left text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] px-4">
-                <th className="px-6 py-2">Entity</th>
-                <th className="px-6 py-2">Timestamp</th>
-                <th className="px-6 py-2">Category</th>
-                <th className="px-6 py-2 text-right">Amount</th>
-                <th className="px-6 py-2 text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody className="space-y-4">
-              {recentTransactions.map((tx) => (
-                <tr key={tx.id} className="rounded-2xl bg-slate-900/60 shadow-lg group hover:bg-slate-800 transition-all duration-300">
-                  <td className="rounded-l-3xl px-6 py-5">
-                    <div className="font-bold text-white group-hover:text-primary transition-colors">{tx.note || 'Internal Transfer'}</div>
-                    {tx.tags && <div className="text-[10px] text-slate-500 mt-1">#{tx.tags}</div>}
-                  </td>
-                  <td className="px-6 py-5 text-sm text-slate-400 font-medium">
-                    {new Date(tx.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                  </td>
-                  <td className="px-6 py-5">
-                     <span className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tx.category?.color || '#334155' }} />
-                        <span className="text-sm font-bold text-slate-300">{tx.category?.name || 'Unsorted'}</span>
-                     </span>
-                  </td>
-                  <td className={cn("px-6 py-5 text-right font-black font-mono text-base tabular-nums", tx.type === 'credit' ? 'text-emerald-400' : 'text-rose-400')}>
-                    {tx.type === 'credit' ? '+' : '-'}{fmt(tx.amount)}
-                  </td>
-                  <td className="rounded-r-3xl px-6 py-5 text-center">
-                    <Badge variant={tx.type as any} className="font-black text-[10px] shadow-sm">
-                      {tx.method || 'CASH'}
-                    </Badge>
-                  </td>
-                </tr>
-              ))}
-              {recentTransactions.length === 0 && (
-                <tr><td colSpan={5} className="text-center py-20 text-slate-500 font-medium">No activity recorded yet for this business.</td></tr>
-              )}
-            </tbody>
-          </table>
+        <div className="space-y-4">
+          {recentTransactions.length === 0 ? (
+            <div className="text-center py-20 text-slate-500 font-medium">No activity recorded yet for this business.</div>
+          ) : (
+            <>
+              {/* Desktop Table View */}
+              <div className="overflow-x-auto hidden lg:block">
+                <table className="w-full min-w-[720px] border-separate border-spacing-y-4">
+                  <thead>
+                    <tr className="text-left text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] px-4">
+                      <th className="px-6 py-2">Entity</th>
+                      <th className="px-6 py-2">Timestamp</th>
+                      <th className="px-6 py-2">Category</th>
+                      <th className="px-6 py-2 text-right">Amount</th>
+                      <th className="px-6 py-2 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="space-y-4">
+                    {recentTransactions.map((tx) => (
+                      <tr key={tx.id} className="rounded-2xl bg-slate-900/60 shadow-lg group hover:bg-slate-800 transition-all duration-300">
+                        <td className="rounded-l-3xl px-6 py-5">
+                          <div className="font-bold text-white group-hover:text-primary transition-colors">{tx.note || 'Internal Transfer'}</div>
+                          {tx.tags && <div className="text-[10px] text-slate-500 mt-1">#{tx.tags}</div>}
+                        </td>
+                        <td className="px-6 py-5 text-sm text-slate-400 font-medium">
+                          {new Date(tx.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td className="px-6 py-5">
+                           <span className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tx.category?.color || '#334155' }} />
+                              <span className="text-sm font-bold text-slate-300">{tx.category?.name || 'Unsorted'}</span>
+                           </span>
+                        </td>
+                        <td className={cn("px-6 py-5 text-right font-black font-mono text-base tabular-nums", tx.type === 'credit' ? 'text-emerald-400' : 'text-rose-400')}>
+                          {tx.type === 'credit' ? '+' : '-'}{fmt(tx.amount)}
+                        </td>
+                        <td className="rounded-r-3xl px-6 py-5 text-center">
+                          <Badge variant={tx.type as any} className="font-black text-[10px] shadow-sm">
+                            {tx.method || 'CASH'}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile List View */}
+              <div className="block lg:hidden space-y-1.5 px-1">
+                {recentTransactions.map((tx) => (
+                  <div key={tx.id} className="py-2 px-2.5 bg-slate-900/60 rounded-xl border border-white/5 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${tx.type === 'credit' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                      <div className="flex-shrink-0 text-center w-8">
+                        <div className="text-[10px] font-black text-white font-mono leading-tight">{new Date(tx.date).toLocaleDateString('en-GB', { day: '2-digit' })}</div>
+                        <div className="text-[8px] text-slate-500 font-bold uppercase leading-tight">{new Date(tx.date).toLocaleDateString('en-GB', { month: 'short' })}</div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-bold text-white truncate">{tx.note || 'Internal Transfer'}</div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: tx.category?.color || '#334155' }} />
+                          <span className="text-[9px] text-slate-500 truncate">{tx.category?.name || 'Unsorted'}</span>
+                          <span className="text-[8px] text-slate-600 uppercase">· {tx.method || 'cash'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={cn("font-black font-mono text-xs tabular-nums flex-shrink-0", tx.type === 'credit' ? 'text-emerald-400' : 'text-rose-400')}>
+                      {tx.type === 'credit' ? '+' : '-'}{fmt(tx.amount)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </section>
     </div>

@@ -313,7 +313,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
             {/* Native App Header — only in Capacitor */}
             {isNativeApp && (
               <header className="bg-background/95 backdrop-blur-2xl sticky top-0 z-30 border-b border-white/5"
-                style={{ paddingTop: 'max(env(safe-area-inset-top), 16px)' }}>
+                style={{ paddingTop: 'max(env(safe-area-inset-top), 50px)' }}>
                 <div className="flex items-center justify-between px-4 pb-3 pt-1">
                   <div className="flex items-center gap-2">
                     <img src="/logos/moneylix-app-icon-dark.svg" alt="Moneylix" className="h-7 w-7" />
