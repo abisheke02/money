@@ -105,7 +105,7 @@ export default function CategoriesPage() {
       {loading ? (
         <div className="flex items-center justify-center h-32"><div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" /></div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {[{ title: 'Expense', cats: debitCats }, { title: 'Income', cats: creditCats }].map(({ title, cats }) => (
             <div key={title} className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
               <div className="px-3 py-2 border-b border-white/10 bg-slate-800/30">
