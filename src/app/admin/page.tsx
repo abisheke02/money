@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Users, CreditCard, IndianRupee, Lightbulb, TrendingUp, Crown, Star, Circle, ArrowRight, ShieldCheck, Plus, Calendar } from 'lucide-react'
+import { Users, IndianRupee, Lightbulb, TrendingUp, Crown, Star, Circle, ArrowRight, ShieldCheck, Plus, Calendar, KeyRound, Eye, EyeOff } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import { cn } from '@/lib/utils/format'
@@ -33,6 +33,65 @@ function StatCard({ icon: Icon, label, value, sub, color, bg }: {
       </div>
       <p className="text-3xl font-black text-white font-mono tabular-nums">{value}</p>
       {sub && <p className="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-tight">{sub}</p>}
+    </div>
+  )
+}
+
+function ChangePasswordWidget() {
+  const [cur, setCur] = useState('')
+  const [next, setNext] = useState('')
+  const [showCur, setShowCur] = useState(false)
+  const [showNext, setShowNext] = useState(false)
+  const [status, setStatus] = useState<'idle'|'loading'|'ok'|'err'>('idle')
+  const [msg, setMsg] = useState('')
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus('loading')
+    const raw = localStorage.getItem('moneylix_admin_auth')
+    if (!raw) { setStatus('err'); setMsg('Not authenticated'); return }
+    const { token } = JSON.parse(raw)
+    const res = await fetch('/api/admin/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ currentPassword: cur, newPassword: next }),
+    })
+    const data = await res.json()
+    if (res.ok) { setStatus('ok'); setMsg('Password changed successfully'); setCur(''); setNext('') }
+    else { setStatus('err'); setMsg(data.error || 'Failed') }
+  }
+
+  return (
+    <div className="rounded-[32px] border border-rose-500/20 bg-rose-500/5 p-8 backdrop-blur-xl shadow-2xl">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-2xl bg-rose-500/20 flex items-center justify-center">
+          <KeyRound className="w-5 h-5 text-rose-400" />
+        </div>
+        <div>
+          <h3 className="text-base font-black text-white">Change Admin Password</h3>
+          <p className="text-[10px] text-rose-400/60 font-bold uppercase tracking-widest">Security — change default immediately</p>
+        </div>
+      </div>
+      <form onSubmit={submit} className="space-y-4">
+        <div className="relative">
+          <input type={showCur ? 'text' : 'password'} placeholder="Current password" value={cur} onChange={e => setCur(e.target.value)} required
+            className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-rose-500/50 pr-10" />
+          <button type="button" onClick={() => setShowCur(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+            {showCur ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        <div className="relative">
+          <input type={showNext ? 'text' : 'password'} placeholder="New password (min 8 chars)" value={next} onChange={e => setNext(e.target.value)} required minLength={8}
+            className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-rose-500/50 pr-10" />
+          <button type="button" onClick={() => setShowNext(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+            {showNext ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        {msg && <p className={`text-xs font-bold ${status === 'ok' ? 'text-emerald-400' : 'text-rose-400'}`}>{msg}</p>}
+        <Button type="submit" loading={status === 'loading'} variant="danger" className="w-full rounded-xl">
+          Update Password
+        </Button>
+      </form>
     </div>
   )
 }
@@ -139,6 +198,9 @@ export default function AdminDashboardPage() {
                </div>
             </div>
           </div>
+
+          {/* Change Password */}
+          <ChangePasswordWidget />
 
           {/* Gateway Status */}
           <div className="rounded-[32px] border border-white/5 bg-white/5 p-8 backdrop-blur-xl shadow-2xl flex flex-col">

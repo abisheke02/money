@@ -6,14 +6,12 @@ export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.text()
     const signature = request.headers.get('x-razorpay-signature')
-    
+
     if (!signature) {
       return NextResponse.json({ error: 'Missing Signature' }, { status: 400 })
     }
 
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || ''
-
-    // Verify webhook signature
     const expectedSignature = crypto
       .createHmac('sha256', webhookSecret)
       .update(rawBody)
@@ -25,34 +23,48 @@ export async function POST(request: NextRequest) {
 
     const event = JSON.parse(rawBody)
 
-    // Handle the Razorpay Webhooks
-    switch(event.event) {
-      case 'payment.captured':
-        console.log('Webhook: Payment Captured ->', event.payload.payment.entity.id)
+    switch (event.event) {
+      case 'payment.captured': {
+        console.log('[webhook] Payment captured:', event.payload.payment.entity.id)
         break
+      }
+
       case 'subscription.activated':
-        console.log('Webhook: Subscription Activated ->', event.payload.subscription.entity.id)
-        const accUserId = event.payload.subscription.entity.notes?.userId
-        if (accUserId) {
-           db.run(`UPDATE subscriptions SET status = 'active', updated_at = datetime('now') WHERE user_id = ? AND status = 'pending'`, [parseInt(accUserId)])
+      case 'subscription.charged': {
+        const sub = event.payload.subscription?.entity
+        const userId = sub?.notes?.userId
+        if (userId) {
+          db.run(
+            `UPDATE subscriptions SET status = 'active', updated_at = datetime('now') WHERE user_id = ? AND status != 'active'`,
+            [parseInt(userId)]
+          )
+          console.log(`[webhook] ${event.event} — user ${userId} activated`)
         }
         break
+      }
+
       case 'subscription.cancelled':
-      case 'payment.failed':
-         console.warn('Webhook: Payment/Subscription Failed or Cancelled')
-         const failUserId = event.payload.subscription?.entity?.notes?.userId || event.payload.payment?.entity?.notes?.userId
-         if (failUserId) {
-            db.run(`UPDATE subscriptions SET status = 'cancelled', updated_at = datetime('now') WHERE user_id = ?`, [parseInt(failUserId)])
-         }
-         break
+      case 'payment.failed': {
+        const subEntity = event.payload.subscription?.entity
+        const payEntity = event.payload.payment?.entity
+        const userId = subEntity?.notes?.userId ?? payEntity?.notes?.userId
+        if (userId) {
+          db.run(
+            `UPDATE subscriptions SET status = 'cancelled', updated_at = datetime('now') WHERE user_id = ?`,
+            [parseInt(userId)]
+          )
+          console.warn(`[webhook] ${event.event} — user ${userId} cancelled/failed`)
+        }
+        break
+      }
+
       default:
-        console.log(`Unhandled event type: ${event.event}`)
+        console.log(`[webhook] Unhandled event: ${event.event}`)
     }
 
-    // Acknowledge webhook immediately
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (error) {
-    console.error('Webhook Error:', error)
+    console.error('[webhook] Handler error:', error)
     return NextResponse.json({ error: 'Webhook Handler Failed' }, { status: 500 })
   }
 }

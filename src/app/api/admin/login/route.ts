@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbQuery from '@/lib/db'
 import crypto from 'crypto'
+import bcrypt from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,25 +10,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Username and password required' }, { status: 400 })
     }
 
-    const hash = Buffer.from(password).toString('base64')
-    const user = dbQuery.get<{ id: number; username: string; email: string }>(
-      "SELECT id, username, email FROM users WHERE (username = ? OR email = ?) AND password = ? AND role = 'admin'",
-      [username, username, hash]
+    const row = dbQuery.get<{ id: number; username: string; email: string; password: string }>(
+      "SELECT id, username, email, password FROM users WHERE (username = ? OR email = ?) AND role = 'admin'",
+      [username, username]
     )
+    if (!row) return NextResponse.json({ error: 'Invalid admin credentials' }, { status: 401 })
 
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid admin credentials' }, { status: 401 })
+    // Support bcrypt (new) and base64 (legacy) — auto-migrate on first login
+    let valid = false
+    if (row.password.startsWith('$2')) {
+      valid = await bcrypt.compare(password, row.password)
+    } else {
+      valid = row.password === Buffer.from(password).toString('base64')
+      if (valid) {
+        const upgraded = await bcrypt.hash(password, 12)
+        dbQuery.run('UPDATE users SET password = ? WHERE id = ?', [upgraded, row.id])
+      }
     }
+    if (!valid) return NextResponse.json({ error: 'Invalid admin credentials' }, { status: 401 })
 
     const sessionToken = crypto.randomUUID()
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 
     dbQuery.run(
       'INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)',
-      [user.id, sessionToken, expiresAt]
+      [row.id, sessionToken, expiresAt]
     )
 
-    return NextResponse.json({ sessionToken, userId: user.id, username: user.username })
+    return NextResponse.json({ sessionToken, userId: row.id, username: row.username })
   } catch (err) {
     console.error('Admin login error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

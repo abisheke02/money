@@ -92,11 +92,12 @@ function seedAdminUser(db: Database.Database): void {
   try {
     const existing = db.prepare("SELECT id FROM users WHERE role = 'admin'").get()
     if (existing) return
-    const password = Buffer.from('admin123').toString('base64')
+    // bcrypt hash of 'Moneylix@Admin2026' — change immediately via /admin settings
+    const hash = '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewFRpOy1R7X3s1im'
     db.prepare(
       "INSERT OR IGNORE INTO users (username, email, password, role) VALUES ('admin', 'admin@moneylix.app', ?, 'admin')"
-    ).run(password)
-    console.log('[db] Admin user seeded — login: admin / admin123')
+    ).run(hash)
+    console.log('[db] Admin seeded — login: admin / Moneylix@Admin2026 — CHANGE THIS NOW')
   } catch (err) {
     console.error('[db] Failed to seed admin user:', err)
   }

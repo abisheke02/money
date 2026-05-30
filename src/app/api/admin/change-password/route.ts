@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbQuery from '@/lib/db'
+import bcrypt from 'bcryptjs'
 import { requireAdmin } from '../_auth'
 
 export async function POST(request: NextRequest) {
@@ -10,17 +11,23 @@ export async function POST(request: NextRequest) {
   if (!currentPassword || !newPassword) {
     return NextResponse.json({ error: 'Both fields are required' }, { status: 400 })
   }
-  if (newPassword.length < 6) {
-    return NextResponse.json({ error: 'New password must be at least 6 characters' }, { status: 400 })
+  if (newPassword.length < 8) {
+    return NextResponse.json({ error: 'New password must be at least 8 characters' }, { status: 400 })
   }
 
-  const user = dbQuery.get<{ password: string }>('SELECT password FROM users WHERE id = ?', [admin.id])
-  const currentHash = Buffer.from(currentPassword).toString('base64')
-  if (user?.password !== currentHash) {
-    return NextResponse.json({ error: 'Current password is incorrect' }, { status: 400 })
-  }
+  const row = dbQuery.get<{ password: string }>('SELECT password FROM users WHERE id = ?', [admin.id])
+  if (!row) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
-  const newHash = Buffer.from(newPassword).toString('base64')
+  // Support both bcrypt and legacy base64
+  let valid = false
+  if (row.password.startsWith('$2')) {
+    valid = await bcrypt.compare(currentPassword, row.password)
+  } else {
+    valid = row.password === Buffer.from(currentPassword).toString('base64')
+  }
+  if (!valid) return NextResponse.json({ error: 'Current password is incorrect' }, { status: 400 })
+
+  const newHash = await bcrypt.hash(newPassword, 12)
   dbQuery.run('UPDATE users SET password = ? WHERE id = ?', [newHash, admin.id])
 
   return NextResponse.json({ success: true })
