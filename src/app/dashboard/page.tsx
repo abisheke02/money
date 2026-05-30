@@ -134,7 +134,7 @@ export default function DashboardPage() {
       {/* Summary Row */}
       <section className="grid gap-3 grid-cols-2 xl:grid-cols-4">
         {summaryCards.map((card) => (
-          <div key={card.title} className={cn("rounded-2xl border p-3 sm:p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl bg-gradient-to-br", card.border, card.bg)}>
+          <div key={card.title} className={cn("rounded-2xl border p-3 sm:p-5 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl bg-gradient-to-br flex flex-col justify-between min-h-[110px]", card.border, card.bg)}>
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0 mr-2">
                 <p className="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest truncate">{card.title}</p>

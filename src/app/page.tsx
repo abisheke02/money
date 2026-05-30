@@ -180,6 +180,13 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
+    // Native Capacitor app: skip marketing page, go straight to login or dashboard
+    const cap = (window as any).Capacitor
+    if (cap?.isNativePlatform?.()) {
+      const isLoggedIn = !!localStorage.getItem('moneylix_auth')
+      window.location.replace(isLoggedIn ? '/dashboard' : '/auth/login')
+      return
+    }
     const onScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)

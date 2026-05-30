@@ -83,22 +83,22 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent">
-      <div className="w-full max-w-md animate-fadeIn">
-        <div className="text-center mb-10">
-          <img src="/logos/moneylix-app-icon-dark.svg" alt="Moneylix" className="h-20 w-20 mb-6 mx-auto drop-shadow-2xl" />
-          <h1 className="text-4xl font-black text-white tracking-tight">Access Hub</h1>
-          <p className="mt-2 text-slate-400 font-medium">Continue your financial journey.</p>
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-5 py-8 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent">
+      <div className="w-full max-w-sm animate-fadeIn">
+        <div className="text-center mb-5">
+          <img src="/logos/moneylix-app-icon-dark.svg" alt="Moneylix" className="h-14 w-14 mb-3 mx-auto drop-shadow-2xl" />
+          <h1 className="text-2xl font-black text-white tracking-tight">Sign In</h1>
+          <p className="mt-1 text-sm text-slate-400">Welcome back to Moneylix</p>
         </div>
 
-        <div className="rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-2xl p-8 shadow-2xl space-y-8">
+        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-5 shadow-2xl space-y-5">
           {/* Demo Login Button */}
           <button
             onClick={handleDemoLogin}
             disabled={loading}
             className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-500 p-px shadow-lg shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-60"
           >
-            <div className="flex items-center justify-center gap-2 rounded-[15px] bg-slate-950/80 px-6 py-4 font-black text-emerald-400 backdrop-blur-xl transition group-hover:bg-transparent group-hover:text-slate-950">
+            <div className="flex items-center justify-center gap-2 rounded-[14px] bg-slate-950/80 px-5 py-3 font-black text-emerald-400 backdrop-blur-xl transition group-hover:bg-transparent group-hover:text-slate-950">
               <Zap className="w-5 h-5" />
               {loading ? 'Authenticating...' : 'Instant Demo Access'}
             </div>
@@ -137,7 +137,7 @@ function LoginContent() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 px-1">
                 <Mail className="w-3.5 h-3.5" />
@@ -176,7 +176,7 @@ function LoginContent() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-14 rounded-2xl font-black text-lg gap-2 mt-4"
+              className="w-full h-12 rounded-2xl font-black text-base gap-2 mt-2"
             >
               {loading ? (
                 <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" />
