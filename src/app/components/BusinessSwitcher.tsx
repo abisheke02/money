@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Plus, ChevronDown, Check, Pencil, Trash2, X } from 'lucide-react'
 import { useBusiness } from '@/lib/contexts/BusinessContext'
 
-export function BusinessSwitcher() {
+export function BusinessSwitcher({ compact = false }: { compact?: boolean }) {
   const { activeBusiness, businesses, setActiveBusinessId, refreshBusinesses } = useBusiness()
   const [open, setOpen] = useState(false)
   const [adding, setAdding] = useState(false)
@@ -116,9 +116,9 @@ export function BusinessSwitcher() {
         </button>
 
         {open && (
-          <div className="absolute top-full left-0 mt-2 w-64 rounded-2xl border border-white/15 bg-slate-900 shadow-2xl z-[60] overflow-hidden">
+          <div className={`absolute top-full left-0 mt-2 rounded-2xl border border-white/15 bg-slate-900 shadow-2xl z-[60] overflow-hidden ${compact ? 'w-full' : 'w-64'}`}>
             {/* Business list */}
-            <div className="max-h-72 overflow-y-auto p-2 space-y-1">
+            <div className={`overflow-y-auto p-2 space-y-0.5 ${compact ? 'max-h-52' : 'max-h-72'}`}>
               {businesses.map((b) => {
                 const isActive = activeBusiness?.id === b.id
                 const isEditing = editingId === b.id
@@ -126,18 +126,18 @@ export function BusinessSwitcher() {
 
                 if (isEditing) {
                   return (
-                    <form key={b.id} onSubmit={(e) => handleEdit(e, b.id)} className="flex items-center gap-2 px-2 py-2">
+                    <form key={b.id} onSubmit={(e) => handleEdit(e, b.id)} className="flex items-center gap-2 px-2 py-1.5">
                       <input
                         autoFocus
                         value={editName}
                         onChange={e => setEditName(e.target.value)}
-                        className="flex-1 bg-slate-800 border border-emerald-400/40 rounded-xl px-3 py-2 text-sm text-white outline-none"
+                        className="flex-1 bg-slate-800 border border-emerald-400/40 rounded-lg px-2 py-1 text-sm text-white outline-none"
                       />
-                      <button type="submit" className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 transition">
-                        <Check className="w-4 h-4" />
+                      <button type="submit" className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 transition">
+                        <Check className="w-3.5 h-3.5" />
                       </button>
-                      <button type="button" onClick={() => setEditingId(null)} className="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white transition">
-                        <X className="w-4 h-4" />
+                      <button type="button" onClick={() => setEditingId(null)} className="p-1.5 rounded-lg bg-white/5 text-slate-400 hover:text-white transition">
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     </form>
                   )
@@ -145,28 +145,28 @@ export function BusinessSwitcher() {
 
                 if (isDeleting) {
                   return (
-                    <div key={b.id} className="px-3 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 mx-1">
-                      <p className="text-sm text-rose-300 mb-3">Delete <span className="font-bold">{b.name}</span>?</p>
+                    <div key={b.id} className="px-3 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 mx-1">
+                      <p className="text-xs text-rose-300 mb-2">Delete <span className="font-bold">{b.name}</span>?</p>
                       <div className="flex gap-2">
-                        <button onClick={() => handleDelete(b.id)} className="flex-1 py-2 rounded-xl bg-rose-500/20 text-rose-300 text-sm font-semibold hover:bg-rose-500/30 transition">Delete</button>
-                        <button onClick={() => setDeletingId(null)} className="flex-1 py-2 rounded-xl bg-white/5 text-slate-400 text-sm hover:text-white transition">Cancel</button>
+                        <button onClick={() => handleDelete(b.id)} className="flex-1 py-1.5 rounded-lg bg-rose-500/20 text-rose-300 text-xs font-semibold hover:bg-rose-500/30 transition">Delete</button>
+                        <button onClick={() => setDeletingId(null)} className="flex-1 py-1.5 rounded-lg bg-white/5 text-slate-400 text-xs hover:text-white transition">Cancel</button>
                       </div>
                     </div>
                   )
                 }
 
                 return (
-                  <div key={b.id} className={`flex items-center gap-3 px-3 py-3 rounded-xl group transition ${isActive ? 'bg-emerald-500/15 border border-emerald-500/20' : 'hover:bg-white/8'}`}>
-                    <button onClick={() => { setActiveBusinessId(b.id); setOpen(false) }} className="flex-1 flex items-center gap-3 text-left">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0 ${
-                        isActive ? 'bg-emerald-500/30 text-emerald-300' : 'bg-white/10 text-slate-300'
+                  <div key={b.id} className={`flex items-center gap-2 px-2 rounded-xl group transition ${compact ? 'py-1.5' : 'py-3 px-3 gap-3'} ${isActive ? 'bg-emerald-500/10' : 'hover:bg-white/5'}`}>
+                    <button onClick={() => { setActiveBusinessId(b.id); setOpen(false) }} className="flex-1 flex items-center gap-2 text-left">
+                      <div className={`rounded-lg flex items-center justify-center font-bold flex-shrink-0 ${compact ? 'w-6 h-6 text-xs rounded-md' : 'w-9 h-9 text-sm rounded-xl font-black'} ${
+                        isActive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-slate-400'
                       }`}>
                         {b.name[0].toUpperCase()}
                       </div>
-                      <span className={`text-sm font-semibold truncate ${isActive ? 'text-emerald-300' : 'text-white'}`}>
+                      <span className={`text-sm truncate ${isActive ? 'text-emerald-300 font-medium' : 'text-slate-300'}`}>
                         {b.name}
                       </span>
-                      {isActive && <Check className="w-4 h-4 text-emerald-400 flex-shrink-0 ml-auto" />}
+                      {isActive && <Check className={`text-emerald-400 flex-shrink-0 ml-auto ${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />}
                     </button>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button onClick={(e) => { e.stopPropagation(); setEditName(b.name); setEditingId(b.id); setDeletingId(null) }} className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-300 hover:bg-emerald-500/10 transition">
@@ -201,9 +201,9 @@ export function BusinessSwitcher() {
                   </div>
                 </form>
               ) : (
-                <button onClick={() => { setAdding(true); setEditingId(null); setDeletingId(null) }} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/5 transition">
-                  <Plus className="w-5 h-5" />
-                  <span className="font-semibold">Add Business</span>
+                <button onClick={() => { setAdding(true); setEditingId(null); setDeletingId(null) }} className={`w-full flex items-center gap-2 px-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/5 transition ${compact ? 'py-2' : 'py-3 gap-3'}`}>
+                  <Plus className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
+                  <span className={compact ? '' : 'font-semibold'}>Add Business</span>
                 </button>
               )}
             </div>

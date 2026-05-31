@@ -294,7 +294,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
               <div className="flex-1 flex flex-col overflow-y-auto sidebar-scroll py-2">
                 <div className="px-2 pb-2">
                   <div className="rounded-xl border border-white/10 bg-slate-900/50 p-1">
-                    <BusinessSwitcher />
+                    <BusinessSwitcher compact />
                   </div>
                 </div>
                 <SidebarContent onClose={() => setSidebarOpen(false)} />
