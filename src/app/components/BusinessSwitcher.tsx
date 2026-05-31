@@ -104,19 +104,21 @@ export function BusinessSwitcher({ compact = false }: { compact?: boolean }) {
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => { setOpen(!open); setAdding(false); setEditingId(null); setDeletingId(null) }}
-          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 transition border border-white/10 active:scale-95"
+          className={`w-full flex items-center justify-between gap-2 rounded-xl bg-slate-900/60 hover:bg-slate-800/80 transition border border-white/10 active:scale-95 ${compact ? 'px-3 py-2.5' : 'px-3 py-2'}`}
         >
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-400/30 to-cyan-400/20 flex items-center justify-center text-emerald-300 font-bold text-sm flex-shrink-0">
-            {activeBusiness?.name?.[0]?.toUpperCase() || 'B'}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={`rounded-lg bg-gradient-to-br from-emerald-400/30 to-cyan-400/20 flex items-center justify-center text-emerald-300 font-bold flex-shrink-0 ${compact ? 'w-7 h-7 text-sm' : 'w-7 h-7 text-sm'}`}>
+              {activeBusiness?.name?.[0]?.toUpperCase() || 'B'}
+            </div>
+            <span className="text-white text-sm font-medium truncate">
+              {activeBusiness?.name || 'Loading...'}
+            </span>
           </div>
-          <span className="text-white text-sm font-semibold truncate max-w-[100px]">
-            {activeBusiness?.name || 'Loading...'}
-          </span>
           <ChevronDown className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
         </button>
 
         {open && (
-          <div className={`absolute top-full left-0 mt-2 rounded-2xl border border-white/15 bg-slate-900 shadow-2xl z-[60] overflow-hidden ${compact ? 'w-full' : 'w-64'}`}>
+          <div className={`absolute top-full left-0 rounded-2xl border border-white/15 bg-slate-900 shadow-2xl z-[60] overflow-hidden ${compact ? 'w-full mt-1' : 'w-64 mt-2'}`}>
             {/* Business list */}
             <div className={`overflow-y-auto p-2 space-y-0.5 ${compact ? 'max-h-52' : 'max-h-72'}`}>
               {businesses.map((b) => {
