@@ -93,10 +93,10 @@ export function BusinessSwitcher() {
 
   return (
     <>
-      {/* Full-screen backdrop blur when dropdown open */}
+      {/* Full-screen backdrop blur — mobile only */}
       {open && (
         <div
-          className="fixed inset-0 z-[55] bg-black/50 backdrop-blur-sm"
+          className="lg:hidden fixed inset-0 z-[55] bg-black/50 backdrop-blur-sm"
           onClick={() => { setOpen(false); setAdding(false); setEditingId(null); setDeletingId(null) }}
         />
       )}
