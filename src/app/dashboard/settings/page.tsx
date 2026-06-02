@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Download, Upload, Info, Tags, ClipboardList, Calculator, CreditCard, HelpCircle, LogOut } from 'lucide-react'
+import { Download, Upload, Info, Tags, ClipboardList, Calculator, CreditCard, HelpCircle, LogOut, Trash2, AlertTriangle } from 'lucide-react'
 import { CurrencySelector } from '@/app/components/CurrencySelector'
+import { BankSyncCard } from '@/app/components/BankSyncCard'
 import { useBusiness } from '@/lib/contexts/BusinessContext'
 import { useRouter } from 'next/navigation'
 
@@ -20,6 +21,9 @@ export default function SettingsPage() {
   const router = useRouter()
   const [toast, setToast] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   const handleLogout = () => {
     localStorage.removeItem('moneylix_auth')
@@ -31,6 +35,38 @@ export default function SettingsPage() {
   }
 
   const showT = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2500) }
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) {
+      showT('Please enter your password')
+      return
+    }
+    setDeleting(true)
+    try {
+      const token = localStorage.getItem('moneylix_session_token')
+      const res = await fetch('/api/user/delete-account', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ password: deletePassword }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        showT(data.error || 'Failed to delete account')
+        setDeleting(false)
+        return
+      }
+      // Clear all local storage and redirect
+      localStorage.clear()
+      router.push('/')
+    } catch (err) {
+      console.error('Delete account error:', err)
+      showT('Something went wrong')
+      setDeleting(false)
+    }
+  }
 
   const handleExport = async (format: 'csv' | 'json') => {
     const params = new URLSearchParams()
@@ -161,6 +197,9 @@ export default function SettingsPage() {
         ))}
       </div>
 
+      {/* Bank Sync */}
+      <BankSyncCard />
+
       {/* Currency */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
         <p className="text-xs font-semibold text-white mb-2">Currency</p>
@@ -185,6 +224,71 @@ export default function SettingsPage() {
       <button onClick={handleLogout} className="lg:hidden w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-rose-500/20 bg-rose-500/10 text-rose-400 text-sm font-bold active:scale-95 transition-all">
         <LogOut className="w-4 h-4" /> Logout
       </button>
+
+      {/* Delete Account — Danger Zone */}
+      <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-7 h-7 rounded-lg bg-rose-500/20 flex items-center justify-center">
+            <Trash2 className="w-4 h-4 text-rose-400" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-rose-300">Delete Account</p>
+            <p className="text-[10px] text-slate-400">Permanently delete your account and all data</p>
+          </div>
+        </div>
+        <p className="text-[10px] text-slate-500 mb-3 leading-relaxed">
+          This will permanently delete your account, all businesses, transactions, categories, and subscription data. This action cannot be undone.
+        </p>
+        <button
+          onClick={() => setShowDeleteModal(true)}
+          className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 font-semibold hover:bg-rose-500/20 active:scale-95 transition-all"
+        >
+          <Trash2 className="w-3 h-3" /> Delete My Account
+        </button>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-[#0d1321] p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/20 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-rose-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Delete Account?</h3>
+                <p className="text-[10px] text-slate-400">This cannot be undone</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              All your data including businesses, transactions, receivables, and subscription will be permanently erased. Enter your password to confirm.
+            </p>
+            <input
+              type="password"
+              placeholder="Enter your password"
+              value={deletePassword}
+              onChange={e => setDeletePassword(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowDeleteModal(false); setDeletePassword('') }}
+                className="flex-1 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm font-semibold text-slate-300 hover:bg-white/10 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleting || !deletePassword}
+                className="flex-1 py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/20 text-sm font-bold text-rose-300 hover:bg-rose-500/30 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {deleting ? 'Deleting...' : 'Delete Forever'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-slate-900 border border-white/10 text-white px-4 py-2 rounded-full shadow-2xl z-50 text-xs">{toast}</div>}
     </div>

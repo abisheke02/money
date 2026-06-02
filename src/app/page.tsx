@@ -599,8 +599,12 @@ export default function LandingPage() {
             <Link href="/auth/register" className="hover:text-white transition">Register</Link>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto mt-8 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600">
+        <div className="max-w-7xl mx-auto mt-8 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>© 2026 Moneylix. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-white transition">Terms of Service</Link>
+          </div>
           <p className="flex items-center gap-1.5"><Shield className="w-3 h-3 text-emerald-500" /> Secured by Razorpay · SSL Encrypted</p>
         </div>
       </footer>

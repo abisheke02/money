@@ -30,6 +30,8 @@ model User {
   subscriptions       Subscription[]
   emailVerifications  EmailVerification[]
   passwordResets      PasswordReset[]
+  bankConnections     BankConnection[]
+  bankTransactions    BankTransaction[]
 
   @@map("users")
 }
@@ -179,4 +181,83 @@ model PasswordReset {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("password_resets")
+}
+
+// ---------------------------------------------------------------------------
+// Bank Sync (Setu Account Aggregator)
+// ---------------------------------------------------------------------------
+
+model BankConnection {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+
+  // Setu AA fields
+  consentId      String?  @unique @map("consent_id")
+  consentHandle  String?  @map("consent_handle")
+  status         String   @default("pending") // pending | active | paused | revoked | expired
+
+  // Bank account info
+  fipId               String? @map("fip_id")
+  accountType         String? @map("account_type")
+  maskedAccountNumber String? @map("masked_account_number")
+  bankName            String? @map("bank_name")
+
+  // Consent validity
+  consentStart   String? @map("consent_start")
+  consentExpiry  String? @map("consent_expiry")
+  frequencyUnit  String  @default("MONTH") @map("frequency_unit")
+  frequencyValue Int     @default(1) @map("frequency_value")
+
+  // Sync tracking
+  lastSyncedAt  String? @map("last_synced_at")
+  lastSyncError String? @map("last_sync_error")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bankTransactions BankTransaction[]
+
+  @@map("bank_connections")
+}
+
+model BankTransaction {
+  id               Int     @id @default(autoincrement())
+  bankConnectionId Int     @map("bank_connection_id")
+  userId           Int     @map("user_id")
+
+  // Transaction details
+  txnId        String? @map("txn_id")
+  type         String  // credit | debit
+  amount       Float
+  currency     String  @default("INR")
+  date         String
+  narration    String?
+  reference    String?
+  balanceAfter Float?  @map("balance_after")
+
+  // AI categorisation
+  categoryId          Int?    @map("category_id")
+  aiCategorySuggestion String? @map("ai_category_suggestion")
+  aiConfidence        Float?  @map("ai_confidence")
+  isCategorised       Int     @default(0) @map("is_categorised")
+
+  // Links
+  linkedTransactionId Int? @map("linked_transaction_id")
+  businessId          Int? @map("business_id")
+
+  // Flags
+  isDuplicate Int @default(0) @map("is_duplicate")
+  ignored     Int @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  bankConnection BankConnection @relation(fields: [bankConnectionId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([bankConnectionId])
+  @@index([txnId])
+  @@map("bank_transactions")
 }
