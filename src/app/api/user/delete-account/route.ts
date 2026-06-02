@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbQuery from '@/lib/db'
-import bcrypt from 'bcrypt'
+import { verifyPassword } from '@/lib/auth/password'
 
 /**
  * DELETE /api/user/delete-account
@@ -60,7 +60,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const passwordValid = await bcrypt.compare(password, user.password)
+    const passwordValid = await verifyPassword(password, user.password)
     if (!passwordValid) {
       return NextResponse.json(
         { error: 'Incorrect password. Account deletion cancelled.' },

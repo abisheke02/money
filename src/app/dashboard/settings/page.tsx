@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Download, Upload, Info, Tags, ClipboardList, Calculator, CreditCard, HelpCircle, LogOut, Trash2, AlertTriangle } from 'lucide-react'
+import { Download, Upload, Info, Tags, ClipboardList, Calculator, CreditCard, HelpCircle, LogOut, Trash2, AlertTriangle, User } from 'lucide-react'
 import { CurrencySelector } from '@/app/components/CurrencySelector'
 import { BankSyncCard } from '@/app/components/BankSyncCard'
 import { useBusiness } from '@/lib/contexts/BusinessContext'
 import { useRouter } from 'next/navigation'
 
 const quickLinks = [
+  { href: '/dashboard/profile',     icon: User,          label: 'Profile',     desc: 'Edit name, email & password',       color: 'text-sky-400',    bg: 'bg-sky-500/10'    },
   { href: '/dashboard/categories',  icon: Tags,          label: 'Categories',  desc: 'Manage expense & income categories', color: 'text-violet-400', bg: 'bg-violet-500/10' },
   { href: '/dashboard/receivables', icon: ClipboardList, label: 'Receivables', desc: 'Track pending client payments',        color: 'text-amber-400',  bg: 'bg-amber-500/10'  },
   { href: '/dashboard/calculator',  icon: Calculator,    label: 'Calculator',  desc: 'Financial calculator with history',   color: 'text-cyan-400',   bg: 'bg-cyan-500/10'   },
