@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import db from '@/lib/db'
+import db from '@/lib/db.async'
 
 export async function GET(request: Request) {
   try {
@@ -11,8 +11,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Business ID is required' }, { status: 400 })
     }
 
-    const transactions = db.all('SELECT * FROM transactions WHERE business_id = ? ORDER BY date DESC, created_at DESC', [businessId]) as any[]
-    const categories = db.all('SELECT * FROM categories') as any[]
+    const transactions = await db.all('SELECT * FROM transactions WHERE business_id = ? ORDER BY date DESC, created_at DESC', [businessId]) as any[]
+    const categories = await db.all('SELECT * FROM categories') as any[]
 
     const mappedTransactions = transactions.map(t => {
       const cat = categories.find(c => c.id === t.category_id)

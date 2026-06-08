@@ -261,3 +261,29 @@ model BankTransaction {
   @@index([txnId])
   @@map("bank_transactions")
 }
+
+// ---------------------------------------------------------------------------
+// Audit Logs (RBI Compliance)
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id            Int      @id @default(autoincrement())
+  userId        Int?     @map("user_id")
+  action        String
+  category      String   @default("general")
+  resourceType  String?  @map("resource_type")
+  resourceId    String?  @map("resource_id")
+  description   String?
+  metadata      String?  // JSON
+  status        String   @default("success")
+  errorMessage  String?  @map("error_message")
+  ipAddress     String?  @map("ip_address")
+  userAgent     String?  @map("user_agent")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([action])
+  @@index([category])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import crypto from 'crypto'
 import bcrypt from 'bcryptjs'
 
@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Username and password required' }, { status: 400 })
     }
 
-    const row = dbQuery.get<{ id: number; username: string; email: string; password: string }>(
+    const row = await dbQuery.get<{ id: number; username: string; email: string; password: string }>(
       "SELECT id, username, email, password FROM users WHERE (username = ? OR email = ?) AND role = 'admin'",
       [username, username]
     )
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       valid = row.password === Buffer.from(password).toString('base64')
       if (valid) {
         const upgraded = await bcrypt.hash(password, 12)
-        dbQuery.run('UPDATE users SET password = ? WHERE id = ?', [upgraded, row.id])
+        await dbQuery.run('UPDATE users SET password = ? WHERE id = ?', [upgraded, row.id])
       }
     }
     if (!valid) return NextResponse.json({ error: 'Invalid admin credentials' }, { status: 401 })
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     const sessionToken = crypto.randomUUID()
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 
-    dbQuery.run(
+    await dbQuery.run(
       'INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)',
       [row.id, sessionToken, expiresAt]
     )

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 
 export async function GET(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const session = dbQuery.get<{ user_id: number }>(
+    const session = await dbQuery.get<{ user_id: number }>(
       "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
       [token]
     )
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     const notifications: { id: string; type: string; message: string; created_at: string }[] = []
 
-    const sub = dbQuery.get<{ plan: string; expires_at: string | null; status: string }>(
+    const sub = await dbQuery.get<{ plan: string; expires_at: string | null; status: string }>(
       "SELECT plan, expires_at, status FROM subscriptions WHERE user_id = ? ORDER BY created_at DESC LIMIT 1",
       [session.user_id]
     )
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Pending receivables reminder
-    const pendingCount = dbQuery.get<{ n: number }>(
+    const pendingCount = await dbQuery.get<{ n: number }>(
       "SELECT COUNT(*) as n FROM transactions WHERE status = 'pending' AND type = 'credit'",
       []
     )

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { sendVerificationEmail } from '@/lib/email/resend'
 
 const SUCCESS_MSG = 'If that email has an unverified account, a new verification link has been sent.'
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
-    const user = dbQuery.get<{ id: number; username: string; email: string; email_verified: number }>(
+    const user = await dbQuery.get<{ id: number; username: string; email: string; email_verified: number }>(
       'SELECT id, username, email, email_verified FROM users WHERE email = ?',
       [email.trim().toLowerCase()]
     )
@@ -22,13 +22,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Invalidate existing unused tokens
-    dbQuery.run(
+    await dbQuery.run(
       "UPDATE email_verifications SET used_at = datetime('now') WHERE user_id = ? AND used_at IS NULL",
       [user.id]
     )
 
     const token = crypto.randomBytes(3).toString('hex').toUpperCase()
-    dbQuery.run(
+    await dbQuery.run(
       'INSERT INTO email_verifications (user_id, token, expires_at) VALUES (?, ?, ?)',
       [user.id, token, new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()]
     )

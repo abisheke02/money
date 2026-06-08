@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { verifyPassword } from '@/lib/auth/password'
+import { audit, AUDIT_ACTIONS } from '@/lib/audit'
 
 /**
  * DELETE /api/user/delete-account
@@ -22,7 +23,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verify session
-    const session = dbQuery.get<{ user_id: number }>(
+    const session = await dbQuery.get<{ user_id: number }>(
       "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
       [token]
     )
@@ -33,7 +34,7 @@ export async function DELETE(request: NextRequest) {
     const userId = session.user_id
 
     // Get user to verify password
-    const user = dbQuery.get<{ id: number; password: string; role: string }>(
+    const user = await dbQuery.get<{ id: number; password: string; role: string }>(
       'SELECT id, password, role FROM users WHERE id = ?',
       [userId]
     )
@@ -75,7 +76,7 @@ export async function DELETE(request: NextRequest) {
     // - email_verifications
     // - password_resets
     // Also clean up user_settings and any orphaned categories
-    dbQuery.transaction((db) => {
+    await dbQuery.transaction((db) => {
       // Explicitly delete all user data in dependency order
       // (CASCADE should handle most of this, but explicit is safer for SQLite)
       const businesses = db.prepare('SELECT id FROM businesses WHERE user_id = ?').all(userId) as { id: number }[]
@@ -95,6 +96,16 @@ export async function DELETE(request: NextRequest) {
 
       // Delete the user (CASCADE handles the rest)
       db.prepare('DELETE FROM users WHERE id = ?').run(userId)
+    })
+
+    audit({
+      userId,
+      action: AUDIT_ACTIONS.ACCOUNT_DELETED,
+      category: 'auth',
+      resourceType: 'user',
+      resourceId: userId,
+      description: 'User permanently deleted their account and all data',
+      request,
     })
 
     return NextResponse.json({

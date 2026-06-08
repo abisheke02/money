@@ -604,6 +604,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-white transition">Terms of Service</Link>
+            <Link href="/cookie-policy" className="hover:text-white transition">Cookies</Link>
           </div>
           <p className="flex items-center gap-1.5"><Shield className="w-3 h-3 text-emerald-500" /> Secured by Razorpay · SSL Encrypted</p>
         </div>

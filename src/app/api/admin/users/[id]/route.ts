@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '../../../admin/_auth'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  if (!requireAdmin(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await requireAdmin(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const userId = parseInt(params.id)
-  const user = dbQuery.get(
+  const user = await dbQuery.get(
     `SELECT u.id, u.username, u.email, u.created_at,
             s.id as sub_id, s.plan, s.status as sub_status,
             s.started_at, s.expires_at, s.amount_paid, s.payment_method, s.notes
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   )
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
-  const history = dbQuery.all(
+  const history = await dbQuery.all(
     'SELECT * FROM subscriptions WHERE user_id = ? ORDER BY created_at DESC',
     [userId]
   )
@@ -26,25 +26,25 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
-  if (!requireAdmin(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await requireAdmin(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const userId = parseInt(params.id)
   const body = await request.json()
   const { plan, status, expires_at, amount_paid, payment_method, notes } = body
 
-  const existing = dbQuery.get<{ id: number }>(
+  const existing = await dbQuery.get<{ id: number }>(
     "SELECT id FROM subscriptions WHERE user_id = ? AND status = 'active'",
     [userId]
   )
 
   if (existing) {
-    dbQuery.run(
+    await dbQuery.run(
       `UPDATE subscriptions SET plan = ?, status = ?, expires_at = ?, amount_paid = ?,
        payment_method = ?, notes = ?, updated_at = datetime('now') WHERE id = ?`,
       [plan, status, expires_at ?? null, amount_paid ?? 0, payment_method ?? null, notes ?? null, existing.id]
     )
   } else {
-    dbQuery.run(
+    await dbQuery.run(
       `INSERT INTO subscriptions (user_id, plan, status, expires_at, amount_paid, payment_method, notes)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [userId, plan ?? 'free', status ?? 'active', expires_at ?? null, amount_paid ?? 0, payment_method ?? null, notes ?? null]

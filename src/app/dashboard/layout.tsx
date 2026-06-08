@@ -13,7 +13,7 @@ function useIsNativeApp() {
 }
 import Link from 'next/link'
 import {
-  LayoutDashboard, Receipt, Settings, LogOut, X,
+  LayoutDashboard, Receipt, Settings, LogOut, X, Building2,
   Bell, Globe, Calculator, ClipboardList, Sparkles, Lock, CreditCard,
   Crown, AlertTriangle, Info, HelpCircle, Plus, Tags,
 } from 'lucide-react'
@@ -28,6 +28,7 @@ import { ErrorBoundary } from '@/app/components/ErrorBoundary'
 const sidebarItems = [
   { href: '/dashboard',               icon: LayoutDashboard, label: 'Dashboard',    gate: null },
   { href: '/dashboard/transactions',  icon: Receipt,         label: 'Transactions', gate: null },
+  { href: '/dashboard/bank',          icon: Building2,       label: 'Bank Sync',    gate: 'bankSync' },
   { href: '/dashboard/categories',    icon: Tags,            label: 'Categories',   gate: null },
   { href: '/dashboard/overall',       icon: Globe,           label: 'Overall',      gate: 'overall' },
   { href: '/dashboard/receivables',   icon: ClipboardList,   label: 'Receivables',  gate: 'receivables' },
@@ -42,7 +43,7 @@ const sidebarItems = [
 const bottomNavItems = [
   { href: '/dashboard',              icon: LayoutDashboard, label: 'Home' },
   { href: '/dashboard/transactions', icon: Receipt,         label: 'Transactions' },
-  { href: '/dashboard/overall',      icon: Globe,           label: 'Overall' },
+  { href: '/dashboard/bank',         icon: Building2,       label: 'Bank' },
   { href: '/dashboard/ai',           icon: Sparkles,        label: 'AI' },
   { href: '/dashboard/settings',     icon: Settings,        label: 'Settings' },
 ]

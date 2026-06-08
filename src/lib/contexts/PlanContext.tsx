@@ -14,12 +14,13 @@ interface PlanFeatures {
   exportCSV: boolean
   exportJSON: boolean
   ocrScanner: boolean
+  bankSync: boolean
 }
 
 export const PLAN_FEATURES: Record<Plan, PlanFeatures> = {
-  free:    { maxBusinesses: 1,        editCategories: false, overall: false, receivables: false, aiAdvisor: false, exportCSV: false, exportJSON: false, ocrScanner: false },
-  pro:     { maxBusinesses: 3,        editCategories: true,  overall: true,  receivables: true,  aiAdvisor: false, exportCSV: true,  exportJSON: false, ocrScanner: false },
-  premium: { maxBusinesses: Infinity, editCategories: true,  overall: true,  receivables: true,  aiAdvisor: true,  exportCSV: true,  exportJSON: true,  ocrScanner: true  },
+  free:    { maxBusinesses: 1,        editCategories: false, overall: false, receivables: false, aiAdvisor: false, exportCSV: false, exportJSON: false, ocrScanner: false, bankSync: false },
+  pro:     { maxBusinesses: 3,        editCategories: true,  overall: true,  receivables: true,  aiAdvisor: false, exportCSV: true,  exportJSON: false, ocrScanner: false, bankSync: true  },
+  premium: { maxBusinesses: Infinity, editCategories: true,  overall: true,  receivables: true,  aiAdvisor: true,  exportCSV: true,  exportJSON: true,  ocrScanner: true,  bankSync: true  },
 }
 
 export const PLAN_LABELS: Record<Plan, { name: string; price: string; color: string; badge: string }> = {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { sendPlanUpgradeEmail } from '@/lib/email/resend'
 
 // Called by cron: GET /api/cron/expire-subscriptions
@@ -12,13 +12,13 @@ export async function GET(request: NextRequest) {
 
   try {
     // 1. Mark expired subscriptions
-    const expired = dbQuery.run(
+    const expired = await dbQuery.run(
       `UPDATE subscriptions SET status = 'expired', updated_at = datetime('now')
        WHERE status = 'active' AND expires_at IS NOT NULL AND expires_at < datetime('now')`
     )
 
     // 2. Find subscriptions expiring in exactly 7 days — send reminder
-    const expiring7 = dbQuery.all<{ user_id: number; plan: string; expires_at: string; email: string }>(
+    const expiring7 = await dbQuery.all<{ user_id: number; plan: string; expires_at: string; email: string }>(
       `SELECT s.user_id, s.plan, s.expires_at, u.email
        FROM subscriptions s JOIN users u ON u.id = s.user_id
        WHERE s.status = 'active'
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     )
 
     // 3. Find subscriptions expiring in exactly 1 day — send urgent reminder
-    const expiring1 = dbQuery.all<{ user_id: number; plan: string; expires_at: string; email: string }>(
+    const expiring1 = await dbQuery.all<{ user_id: number; plan: string; expires_at: string; email: string }>(
       `SELECT s.user_id, s.plan, s.expires_at, u.email
        FROM subscriptions s JOIN users u ON u.id = s.user_id
        WHERE s.status = 'active'

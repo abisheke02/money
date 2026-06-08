@@ -1,26 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import db from '@/lib/db'
+import db from '@/lib/db.async'
 import { parseQuery, TransactionFiltersSchema, parseBody, CreateTransactionSchema } from '@/lib/schemas'
 import type { PaginatedTransactions } from '@/types'
 
-function getUserId(request: NextRequest): number | null {
+async function getUserId(request: NextRequest): Promise<number | null> {
   const token = (request.headers.get('authorization') ?? '').replace('Bearer ', '')
   if (!token) return null
-  const session = db.get<{ user_id: number }>(
+  const session = await db.get<{ user_id: number }>(
     "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
     [token]
   )
   return session?.user_id ?? null
 }
 
-function userOwnsBusinessId(userId: number, businessId: number): boolean {
-  const biz = db.get('SELECT id FROM businesses WHERE id = ? AND user_id = ?', [businessId, userId])
+async function userOwnsBusinessId(userId: number, businessId: number): Promise<boolean> {
+  const biz = await db.get('SELECT id FROM businesses WHERE id = ? AND user_id = ?', [businessId, userId])
   return !!biz
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = getUserId(request)
+    const userId = await getUserId(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { searchParams } = new URL(request.url)
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const params: unknown[] = []
 
     if (businessId) {
-      if (!userOwnsBusinessId(userId, businessId)) {
+      if (!await userOwnsBusinessId(userId, businessId)) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
       conditions.push('t.business_id = ?'); params.push(businessId)
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     const orderDir = sortOrder === 'asc' ? 'ASC' : 'DESC'
     const offset = (page - 1) * limit
 
-    const countRow = db.get<{ n: number }>(
+    const countRow = await db.get<{ n: number }>(
       `SELECT COUNT(*) as n FROM transactions t ${where}`,
       params
     )
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       cat_color: string | null; cat_type: string | null; cat_created_at: string | null
     }
 
-    const rows = db.all<Row>(
+    const rows = await db.all<Row>(
       `SELECT t.*,
               c.id as cat_id, c.name as cat_name, c.icon as cat_icon,
               c.color as cat_color, c.type as cat_type, c.created_at as cat_created_at
@@ -123,20 +123,20 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = getUserId(request)
+    const userId = await getUserId(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const parsed = parseBody(CreateTransactionSchema, await request.json())
     if (parsed.error) return parsed.error
 
     const d = parsed.data
-    if (d.business_id && !userOwnsBusinessId(userId, d.business_id)) {
+    if (d.business_id && !await userOwnsBusinessId(userId, d.business_id)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const now = new Date().toISOString()
 
-    const result = db.run(
+    const result = await db.run(
       `INSERT INTO transactions
          (type, amount, category_id, business_id, currency, date, due_date, reminder_days,
           note, method, tags, status, client_name, created_at, updated_at)
@@ -160,14 +160,14 @@ export async function POST(request: NextRequest) {
       cat_color: string | null; cat_type: string | null; cat_created_at: string | null
     }
 
-    const row = db.get<TxRow>(
+    const row = (await db.get<TxRow>(
       `SELECT t.*,
               c.id as cat_id, c.name as cat_name, c.icon as cat_icon,
               c.color as cat_color, c.type as cat_type, c.created_at as cat_created_at
        FROM transactions t LEFT JOIN categories c ON c.id = t.category_id
        WHERE t.id = ?`,
       [id]
-    )!
+    ))!
 
     return NextResponse.json({
       id: row.id,

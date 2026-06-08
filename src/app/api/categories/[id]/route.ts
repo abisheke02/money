@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import db from '@/lib/db'
+import db from '@/lib/db.async'
 import { categorySchema } from '@/lib/schemas'
 
 export async function GET(
@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const category = db.get('SELECT * FROM categories WHERE id = ?', [params.id])
+    const category = await db.get('SELECT * FROM categories WHERE id = ?', [params.id])
     if (!category) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 })
     }
@@ -32,7 +32,7 @@ export async function PUT(
     
     const { name, icon, color, type } = validation.data
 
-    const category = db.transaction((tx) => {
+    const category = await db.transaction((tx) => {
       tx.prepare('UPDATE categories SET name = ?, icon = ?, color = ?, type = ? WHERE id = ?').run(name, icon, color, type, params.id)
       return tx.prepare('SELECT * FROM categories WHERE id = ?').get(params.id)
     })
@@ -48,7 +48,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    db.transaction((tx) => {
+    await db.transaction((tx) => {
       const count = tx.prepare('SELECT COUNT(*) as count FROM transactions WHERE category_id = ?').get(params.id) as any
       if (count && count.count > 0) {
         throw new Error('Cannot delete category with transactions')

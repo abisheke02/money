@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { hashPassword } from '@/lib/auth/password'
 import { registerSchema } from '@/lib/schemas'
 
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
     const { username, email, password } = validation.data
 
-    const existing = dbQuery.get<{ id: number }>(
+    const existing = await dbQuery.get<{ id: number }>(
       'SELECT id FROM users WHERE username = ? OR email = ?',
       [username, email]
     )
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     const hash = await hashPassword(password)
 
-    const result = dbQuery.run(
+    const result = await dbQuery.run(
       "INSERT INTO users (username, email, password, role, email_verified) VALUES (?, ?, ?, 'user', 1)",
       [username, email, hash]
     )
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // Auto-create default business for every new user
     const now = new Date().toISOString()
-    dbQuery.run(
+    await dbQuery.run(
       'INSERT INTO businesses (name, user_id, created_at) VALUES (?, ?, ?)',
       ['My Finances', userId, now]
     )

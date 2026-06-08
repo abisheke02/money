@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 
 /**
  * POST /api/bank/setu-webhook
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         // Update the bank connection
         if (consentId && mappedStatus === 'active') {
           // Consent approved — store consentId for future data fetches
-          dbQuery.run(
+          await dbQuery.run(
             `UPDATE bank_connections 
              SET consent_id = ?, status = ?, updated_at = datetime('now')
              WHERE consent_handle = ?`,
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
           console.log(`[setu-webhook] Consent activated: handle=${consentHandle}, id=${consentId}`)
         } else {
           // Consent rejected, revoked, or expired
-          dbQuery.run(
+          await dbQuery.run(
             `UPDATE bank_connections 
              SET status = ?, updated_at = datetime('now')
              WHERE consent_handle = ?`,
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 
         // Store the session ID for the sync route to pick up
         // We could auto-sync here, but letting the user trigger sync gives better UX control
-        dbQuery.run(
+        await dbQuery.run(
           `UPDATE bank_connections 
            SET last_sync_error = NULL, updated_at = datetime('now')
            WHERE consent_id = ?`,
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
 
         if (consentHandle && accounts && accounts.length > 0) {
           const account = accounts[0] // Take the first linked account
-          dbQuery.run(
+          await dbQuery.run(
             `UPDATE bank_connections 
              SET fip_id = ?, account_type = ?, masked_account_number = ?, bank_name = ?, updated_at = datetime('now')
              WHERE consent_handle = ?`,

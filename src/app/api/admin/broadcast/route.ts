@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { requireAdmin } from '@/app/api/admin/_auth'
 
 export async function POST(request: NextRequest) {
-  const admin = requireAdmin(request)
+  const admin = await requireAdmin(request)
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     let users: { id: number; email: string; username: string }[]
 
     if (plan_filter && plan_filter !== 'all') {
-      users = dbQuery.all<{ id: number; email: string; username: string }>(
+      users = await dbQuery.all<{ id: number; email: string; username: string }>(
         `SELECT DISTINCT u.id, u.email, u.username
          FROM users u
          JOIN subscriptions s ON s.user_id = u.id
@@ -25,14 +25,14 @@ export async function POST(request: NextRequest) {
         [plan_filter]
       )
     } else {
-      users = dbQuery.all<{ id: number; email: string; username: string }>(
+      users = await dbQuery.all<{ id: number; email: string; username: string }>(
         'SELECT id, email, username FROM users WHERE email_verified = 1'
       )
     }
 
     // Store broadcast in DB for notification center
     const now = new Date().toISOString()
-    dbQuery.run(
+    await dbQuery.run(
       `INSERT INTO broadcasts (subject, message, plan_filter, sent_by, sent_at, recipient_count)
        VALUES (?, ?, ?, ?, ?, ?)`,
       [subject, message, plan_filter ?? 'all', admin.id, now, users.length]

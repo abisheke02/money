@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { verifyPassword } from '@/lib/auth/password'
 import { loginSchema } from '@/lib/schemas'
 
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     const { username, password } = validation.data
 
-    const user = dbQuery.get<{
+    const user = await dbQuery.get<{
       id: number; username: string; email: string
       password: string; email_verified: number
     }>(
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     const sessionToken = crypto.randomUUID()
-    dbQuery.run(
+    await dbQuery.run(
       'INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)',
       [user.id, sessionToken, new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()]
     )

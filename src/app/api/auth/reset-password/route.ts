@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { hashPassword } from '@/lib/auth/password'
 
 export async function POST(request: NextRequest) {
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 })
     }
 
-    const record = dbQuery.get<{
+    const record = await dbQuery.get<{
       id: number; user_id: number; expires_at: string; used_at: string | null
     }>(
       'SELECT id, user_id, expires_at, used_at FROM password_resets WHERE token = ?',
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     const hashed = await hashPassword(newPassword)
 
-    dbQuery.transaction((db) => {
+    await dbQuery.transaction((db) => {
       db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashed, record.user_id)
       db.prepare("UPDATE password_resets SET used_at = datetime('now') WHERE id = ?").run(record.id)
     })

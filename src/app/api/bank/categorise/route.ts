@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const session = dbQuery.get<{ user_id: number }>(
+    const session = await dbQuery.get<{ user_id: number }>(
       "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
       [token]
     )
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const userId = session.user_id
 
     // Get user's categories for mapping
-    const categories = dbQuery.all<{ id: number; name: string; type: string }>(
+    const categories = await dbQuery.all<{ id: number; name: string; type: string }>(
       `SELECT DISTINCT c.id, c.name, c.type FROM categories c
        LEFT JOIN businesses b ON c.business_id = b.id
        WHERE c.business_id IS NULL OR b.user_id = ?`,
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get uncategorised transactions (batch of 50)
-    const uncategorised = dbQuery.all<{ id: number; narration: string; amount: number; type: string; date: string }>(
+    const uncategorised = await dbQuery.all<{ id: number; narration: string; amount: number; type: string; date: string }>(
       `SELECT id, narration, amount, type, date FROM bank_transactions
        WHERE user_id = ? AND is_categorised = 0 AND narration IS NOT NULL AND narration != ''
        ORDER BY date DESC LIMIT 50`,
@@ -117,7 +117,7 @@ Rules:
       // Only auto-accept if confidence >= 0.7, otherwise just store suggestion
       const isHighConfidence = suggestion.confidence >= 0.7
 
-      dbQuery.run(
+      await dbQuery.run(
         `UPDATE bank_transactions 
          SET category_id = ?, ai_category_suggestion = ?, ai_confidence = ?, 
              is_categorised = ?, updated_at = datetime('now')

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import db from '@/lib/db'
+import db from '@/lib/db.async'
 
-function getUserId(request: NextRequest): number | null {
+async function getUserId(request: NextRequest): Promise<number | null> {
   const token = request.headers.get('authorization')?.replace('Bearer ', '')
   if (!token) return null
-  const session = db.get<{ user_id: number }>(
+  const session = await db.get<{ user_id: number }>(
     "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
     [token]
   )
@@ -13,10 +13,10 @@ function getUserId(request: NextRequest): number | null {
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = getUserId(request)
+    const userId = await getUserId(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const grandTotals = db.get<{ totalIncome: number; totalExpense: number; totalPending: number }>(`
+    const grandTotals = await db.get<{ totalIncome: number; totalExpense: number; totalPending: number }>(`
       SELECT
         COALESCE(SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE 0 END), 0) as totalIncome,
         COALESCE(SUM(CASE WHEN t.type = 'debit' THEN t.amount ELSE 0 END), 0) as totalExpense,
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     const totalPending = grandTotals?.totalPending ?? 0
     const netProfit = totalIncome - totalExpense
 
-    const businessBreakdown = db.all(`
+    const businessBreakdown = await db.all(`
       SELECT
         b.id,
         b.name,

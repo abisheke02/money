@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { createConsent } from '@/lib/setu/client'
+import { audit, AUDIT_ACTIONS } from '@/lib/audit'
 
 /**
  * POST /api/bank/create-consent
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const session = dbQuery.get<{ user_id: number }>(
+    const session = await dbQuery.get<{ user_id: number }>(
       "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
       [token]
     )
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
     const userId = session.user_id
 
     // Check if user already has an active connection
-    const existing = dbQuery.get<{ id: number }>(
+    const existing = await dbQuery.get<{ id: number }>(
       "SELECT id FROM bank_connections WHERE user_id = ? AND status = 'active'",
       [userId]
     )
@@ -50,11 +51,20 @@ export async function POST(request: NextRequest) {
     const { consentHandle, redirectUrl } = await createConsent(userId, mobileNumber)
 
     // Save to database
-    dbQuery.run(
+    await dbQuery.run(
       `INSERT INTO bank_connections (user_id, consent_handle, status, created_at, updated_at)
        VALUES (?, ?, 'pending', datetime('now'), datetime('now'))`,
       [userId, consentHandle]
     )
+
+    audit({
+      userId,
+      action: AUDIT_ACTIONS.CONSENT_CREATED,
+      category: 'bank_sync',
+      resourceType: 'bank_connection',
+      description: `Consent initiated for mobile ${mobileNumber.slice(0, 2)}****${mobileNumber.slice(-2)}`,
+      request,
+    })
 
     return NextResponse.json({
       success: true,

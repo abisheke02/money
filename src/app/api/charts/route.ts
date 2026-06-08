@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import db from '@/lib/db'
+import db from '@/lib/db.async'
 
-function getUserId(request: NextRequest): number | null {
+async function getUserId(request: NextRequest): Promise<number | null> {
   const token = (request.headers.get('authorization') ?? '').replace('Bearer ', '')
   if (!token) return null
-  const session = db.get<{ user_id: number }>(
+  const session = await db.get<{ user_id: number }>(
     "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
     [token]
   )
@@ -13,7 +13,7 @@ function getUserId(request: NextRequest): number | null {
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = getUserId(request)
+    const userId = await getUserId(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { searchParams } = new URL(request.url)
@@ -23,11 +23,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Business ID is required' }, { status: 400 })
     }
 
-    const biz = db.get('SELECT id FROM businesses WHERE id = ? AND user_id = ?', [businessId, userId])
+    const biz = await db.get('SELECT id FROM businesses WHERE id = ? AND user_id = ?', [businessId, userId])
     if (!biz) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-    const transactions = db.all('SELECT * FROM transactions WHERE business_id = ?', [businessId]) as any[]
-    const categories = db.all('SELECT * FROM categories') as any[]
+    const transactions = await db.all('SELECT * FROM transactions WHERE business_id = ?', [businessId]) as any[]
+    const categories = await db.all('SELECT * FROM categories') as any[]
 
     // Get top 5 categories by spending (debit only)
     const categoryMap = new Map<number, number>()

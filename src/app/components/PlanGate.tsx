@@ -13,6 +13,7 @@ const requiredPlan: Record<string, Plan> = {
   exportCSV: 'pro',
   exportJSON: 'premium',
   aiAdvisor: 'premium',
+  bankSync: 'pro',
 }
 
 export function PlanGate({ feature, children }: { feature: Feature; children: React.ReactNode }) {

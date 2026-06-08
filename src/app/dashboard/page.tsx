@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { AlertCircle, ArrowRight, TrendingUp, TrendingDown, Wallet, Target, Search, Crown } from 'lucide-react'
+import { AlertCircle, ArrowRight, TrendingUp, TrendingDown, Wallet, Target, Search, Crown, Building2, ArrowDownLeft, ArrowUpRight, RefreshCw, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useBusiness } from '@/lib/contexts/BusinessContext'
 import { useCurrency } from '@/lib/contexts/CurrencyContext'
@@ -15,14 +15,27 @@ import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import { cn } from '@/lib/utils/format'
 
+interface BankTx {
+  id: number
+  type: 'credit' | 'debit'
+  amount: number
+  currency: string
+  date: string
+  narration: string
+  ai_category_suggestion: string | null
+  is_categorised: number
+}
+
 export default function DashboardPage() {
   const { activeBusiness, loading: businessLoading } = useBusiness()
-  const { plan, daysLeft } = usePlan()
+  const { plan, daysLeft, can } = usePlan()
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [categorySpend, setCategorySpend] = useState<CategorySpend[]>([])
   const [dailyCashflow, setDailyCashflow] = useState<DailyCashflow[]>([])
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
+  const [bankTxs, setBankTxs] = useState<BankTx[]>([])
+  const [bankLoading, setBankLoading] = useState(false)
   const { currentCurrency, currencies, loading: currencyLoading } = useCurrency()
 
   const fetchData = useCallback(async () => {
@@ -51,7 +64,26 @@ export default function DashboardPage() {
     }
   }, [activeBusiness])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  const fetchBankActivity = useCallback(async () => {
+    if (!can('bankSync')) return
+    setBankLoading(true)
+    try {
+      const token = localStorage.getItem('moneylix_session_token') ?? ''
+      if (!token) return
+      const res = await fetch('/api/bank/transactions?limit=5', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      setBankTxs(data.transactions || [])
+    } catch {
+      // Silent — bank sync section just won't show
+    } finally {
+      setBankLoading(false)
+    }
+  }, [can])
+
+  useEffect(() => { fetchData(); fetchBankActivity() }, [fetchData, fetchBankActivity])
 
   const fmt = useCallback((amount: number) => {
     const sym = currencies.find(c => c.code === currentCurrency)?.symbol ?? currentCurrency
@@ -327,6 +359,75 @@ export default function DashboardPage() {
           )}
         </div>
       </section>
+
+      {/* Bank Activity Section (Pro/Premium only) */}
+      {can('bankSync') && bankTxs.length > 0 && (
+        <section className="rounded-[32px] border border-emerald-500/10 bg-gradient-to-br from-emerald-500/5 to-transparent p-8 backdrop-blur-xl shadow-2xl">
+          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-white tracking-tight">Bank Activity</h3>
+                <p className="text-xs text-slate-400 font-medium">Latest transactions from your connected bank</p>
+              </div>
+            </div>
+            <Link href="/dashboard/bank">
+              <Button variant="ghost" className="rounded-2xl px-6 gap-2 text-emerald-400 hover:bg-emerald-400/10">
+                View All <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="space-y-1.5">
+            {bankTxs.map((tx) => (
+              <div
+                key={tx.id}
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition"
+              >
+                {/* Icon */}
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  tx.type === 'credit' ? 'bg-emerald-500/15' : 'bg-rose-500/15'
+                }`}>
+                  {tx.type === 'credit'
+                    ? <ArrowDownLeft className="w-4 h-4 text-emerald-400" />
+                    : <ArrowUpRight className="w-4 h-4 text-rose-400" />
+                  }
+                </div>
+
+                {/* Details */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-white truncate">
+                    {tx.narration || 'Bank Transaction'}
+                  </p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] text-slate-500">
+                      {new Date(tx.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                    </span>
+                    {tx.ai_category_suggestion && (
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                        tx.is_categorised
+                          ? 'bg-emerald-500/15 text-emerald-400'
+                          : 'bg-violet-500/15 text-violet-400'
+                      }`}>
+                        {!tx.is_categorised && '✨ '}{tx.ai_category_suggestion}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Amount */}
+                <p className={`text-sm font-black flex-shrink-0 ${
+                  tx.type === 'credit' ? 'text-emerald-400' : 'text-rose-400'
+                }`}>
+                  {tx.type === 'credit' ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

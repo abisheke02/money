@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { getConsentStatus } from '@/lib/setu/client'
 
 /**
@@ -16,14 +16,14 @@ export async function GET(request: NextRequest) {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const session = dbQuery.get<{ user_id: number }>(
+    const session = await dbQuery.get<{ user_id: number }>(
       "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
       [token]
     )
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Get the most recent connection
-    const connection = dbQuery.get<{
+    const connection = await dbQuery.get<{
       id: number
       consent_handle: string | null
       consent_id: string | null
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
         if (setuStatus.status === 'ACTIVE' && setuStatus.consentId) {
           // Consent was approved — update DB
-          dbQuery.run(
+          await dbQuery.run(
             `UPDATE bank_connections SET consent_id = ?, status = 'active', updated_at = datetime('now') WHERE id = ?`,
             [setuStatus.consentId, connection.id]
           )
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
             lastSyncedAt: connection.last_synced_at,
           })
         } else if (['REVOKED', 'REJECTED', 'EXPIRED'].includes(setuStatus.status)) {
-          dbQuery.run(
+          await dbQuery.run(
             "UPDATE bank_connections SET status = 'revoked', updated_at = datetime('now') WHERE id = ?",
             [connection.id]
           )

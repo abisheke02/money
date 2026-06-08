@@ -23,7 +23,18 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
 .env*.local
+
+# signing keys & certificates
+*.jks
+*.keystore
+*.p12
+*.key
+*.csr
+*.cer
+*.cer.cer
+openssl.cnf
 
 # vercel
 .vercel
@@ -43,3 +54,13 @@ scratch/
 temp_repo/
 android/app/build
 android/.gradle
+android/app/release
+*.apk
+*.aab
+
+# IDE
+.idea/
+
+# next-pwa generated service worker
+public/sw.js
+public/workbox-*.js

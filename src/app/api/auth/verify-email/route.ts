@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { sendWelcomeEmail } from '@/lib/email/resend'
 
 export async function GET(request: NextRequest) {
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/auth/login?error=invalid_token', request.url))
     }
 
-    const record = dbQuery.get<{
+    const record = await dbQuery.get<{
       id: number; user_id: number; expires_at: string; used_at: string | null
       username: string; email: string
     }>(
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/auth/login?error=token_expired', request.url))
     }
 
-    dbQuery.transaction((db) => {
+    await dbQuery.transaction((db) => {
       db.prepare('UPDATE users SET email_verified = 1 WHERE id = ?').run(record.user_id)
       db.prepare("UPDATE email_verifications SET used_at = datetime('now') WHERE id = ?").run(record.id)
     })

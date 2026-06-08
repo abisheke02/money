@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import db from '@/lib/db'
+import db from '@/lib/db.async'
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         const sub = event.payload.subscription?.entity
         const userId = sub?.notes?.userId
         if (userId) {
-          db.run(
+          await db.run(
             `UPDATE subscriptions SET status = 'active', updated_at = datetime('now') WHERE user_id = ? AND status != 'active'`,
             [parseInt(userId)]
           )
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
         const payEntity = event.payload.payment?.entity
         const userId = subEntity?.notes?.userId ?? payEntity?.notes?.userId
         if (userId) {
-          db.run(
+          await db.run(
             `UPDATE subscriptions SET status = 'cancelled', updated_at = datetime('now') WHERE user_id = ?`,
             [parseInt(userId)]
           )

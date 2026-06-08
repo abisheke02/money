@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,13 +11,13 @@ export async function POST(request: NextRequest) {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     let userId: number | null = null
     if (token) {
-      const session = dbQuery.get<{ user_id: number }>(
+      const session = await dbQuery.get<{ user_id: number }>(
         "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')", [token]
       )
       userId = session?.user_id ?? null
     }
 
-    dbQuery.run(
+    await dbQuery.run(
       'INSERT INTO support_tickets (email, subject, message, user_id) VALUES (?, ?, ?, ?)',
       [email.trim(), subject.trim(), message.trim(), userId]
     )

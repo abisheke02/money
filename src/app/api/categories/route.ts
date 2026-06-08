@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import db from '@/lib/db'
+import db from '@/lib/db.async'
 import { categorySchema } from '@/lib/schemas'
 
 export async function GET() {
   try {
-    const categories = db.all('SELECT * FROM categories ORDER BY type, name')
+    const categories = await db.all('SELECT * FROM categories ORDER BY type, name')
     return NextResponse.json(categories)
   } catch (error) {
     console.error('Categories fetch error:', error)
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     const { name, icon, color, type } = validation.data
 
-    const category = db.transaction((tx) => {
+    const category = await db.transaction((tx) => {
       const result = tx.prepare('INSERT INTO categories (name, icon, color, type, created_at) VALUES (?, ?, ?, ?, ?)').run(name, icon, color, type, new Date().toISOString())
       return tx.prepare('SELECT * FROM categories WHERE id = ?').get(result.lastInsertRowid)
     })

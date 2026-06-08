@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '../../admin/_auth'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await requireAdmin(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = new URL(request.url)
   const plan = searchParams.get('plan')
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   if (status) { conditions.push('s.status = ?'); params.push(status) }
   const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : ''
 
-  const subs = dbQuery.all(
+  const subs = await dbQuery.all(
     `SELECT s.*, u.username, u.email FROM subscriptions s
      JOIN users u ON u.id = s.user_id
      ${where}
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     [...params, limit, offset]
   )
 
-  const totalRow = dbQuery.get<{ count: number }>(
+  const totalRow = await dbQuery.get<{ count: number }>(
     `SELECT COUNT(*) as count FROM subscriptions s ${where}`,
     params
   )

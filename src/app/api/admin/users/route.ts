@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '../../admin/_auth'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) {
+  if (!await requireAdmin(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     : "WHERE u.role = 'user'"
   const params = search ? [`%${search}%`, `%${search}%`, limit, offset] : [limit, offset]
 
-  const users = dbQuery.all<{
+  const users = await dbQuery.all<{
     id: number; username: string; email: string; created_at: string
     plan: string | null; sub_status: string | null; sub_expires: string | null; amount_paid: number | null
     tx_count: number
@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
   )
 
   const totalRow = search
-    ? dbQuery.get<{ count: number }>("SELECT COUNT(*) as count FROM users u WHERE u.role = 'user' AND (u.username LIKE ? OR u.email LIKE ?)", [`%${search}%`, `%${search}%`])
-    : dbQuery.get<{ count: number }>("SELECT COUNT(*) as count FROM users WHERE role = 'user'")
+    ? await dbQuery.get<{ count: number }>("SELECT COUNT(*) as count FROM users u WHERE u.role = 'user' AND (u.username LIKE ? OR u.email LIKE ?)", [`%${search}%`, `%${search}%`])
+    : await dbQuery.get<{ count: number }>("SELECT COUNT(*) as count FROM users WHERE role = 'user'")
 
   return NextResponse.json({ users, total: totalRow?.count ?? 0, page, limit })
 }

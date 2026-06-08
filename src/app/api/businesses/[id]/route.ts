@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import db from '@/lib/db'
+import db from '@/lib/db.async'
 import { businessSchema } from '@/lib/schemas'
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
@@ -11,7 +11,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     const { name } = validation.data
-    const updated = db.transaction((tx) => {
+    const updated = await db.transaction((tx) => {
       tx.prepare('UPDATE businesses SET name = ? WHERE id = ?').run(name.trim(), params.id)
       return tx.prepare('SELECT * FROM businesses WHERE id = ?').get(params.id)
     })
@@ -25,7 +25,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 export async function DELETE(_: Request, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id)
-    db.transaction((tx) => {
+    await db.transaction((tx) => {
       const count = (tx.prepare('SELECT COUNT(*) as c FROM businesses').get() as any)?.c ?? 0
       if (count <= 1) {
         throw new Error('Cannot delete the last business')

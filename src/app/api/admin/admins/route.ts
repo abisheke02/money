@@ -1,28 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { requireAdmin } from '../_auth'
 
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await requireAdmin(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const admins = dbQuery.all(
+  const admins = await dbQuery.all(
     "SELECT id, username, email, created_at FROM users WHERE role = 'admin' ORDER BY created_at ASC"
   )
   return NextResponse.json({ admins })
 }
 
 export async function POST(request: NextRequest) {
-  if (!requireAdmin(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await requireAdmin(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { username, email, password } = await request.json()
   if (!username || !email || !password) return NextResponse.json({ error: 'All fields required' }, { status: 400 })
   if (password.length < 6) return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
 
-  const existing = dbQuery.get('SELECT id FROM users WHERE username = ? OR email = ?', [username, email])
+  const existing = await dbQuery.get('SELECT id FROM users WHERE username = ? OR email = ?', [username, email])
   if (existing) return NextResponse.json({ error: 'Username or email already exists' }, { status: 400 })
 
   const hash = Buffer.from(password).toString('base64')
-  dbQuery.run(
+  await dbQuery.run(
     "INSERT INTO users (username, email, password, role, email_verified) VALUES (?, ?, ?, 'admin', 1)",
     [username, email, hash]
   )

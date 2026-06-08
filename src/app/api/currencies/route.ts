@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 
 export async function GET() {
   try {
-    const currencies = dbQuery.all('SELECT * FROM currencies')
-    const defaultCurrencySetting = dbQuery.get('SELECT value FROM settings WHERE key = ?', ['defaultCurrency'])
+    const currencies = await dbQuery.all('SELECT * FROM currencies')
+    const defaultCurrencySetting = await dbQuery.get('SELECT value FROM settings WHERE key = ?', ['defaultCurrency'])
     
     return NextResponse.json({
       currencies,
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    const setting = dbQuery.transaction((tx) => {
+    const setting = await dbQuery.transaction((tx) => {
       tx.prepare('UPDATE settings SET value = ? WHERE key = ?').run(defaultCurrency, 'defaultCurrency')
       return tx.prepare('SELECT value FROM settings WHERE key = ?').get('defaultCurrency') as any
     })

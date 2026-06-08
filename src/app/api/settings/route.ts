@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { settingsSchema } from '@/lib/schemas'
 
-function getUserId(request: NextRequest): number | null {
+async function getUserId(request: NextRequest): Promise<number | null> {
   const token = (request.headers.get('authorization') ?? '').replace('Bearer ', '')
   if (!token) return null
-  const session = dbQuery.get<{ user_id: number }>(
+  const session = await dbQuery.get<{ user_id: number }>(
     "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
     [token]
   )
@@ -14,14 +14,14 @@ function getUserId(request: NextRequest): number | null {
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = getUserId(request)
+    const userId = await getUserId(request)
     if (!userId) {
       // Unauthenticated: return global default
-      const setting = dbQuery.get<{ value: string }>('SELECT value FROM settings WHERE key = ?', ['defaultCurrency'])
+      const setting = await dbQuery.get<{ value: string }>('SELECT value FROM settings WHERE key = ?', ['defaultCurrency'])
       return NextResponse.json({ defaultCurrency: setting?.value || 'INR', updated_at: new Date().toISOString() })
     }
 
-    const setting = dbQuery.get<{ value: string }>(
+    const setting = await dbQuery.get<{ value: string }>(
       'SELECT value FROM user_settings WHERE user_id = ? AND key = ?',
       [userId, 'defaultCurrency']
     )
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = getUserId(request)
+    const userId = await getUserId(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     const { defaultCurrency } = validation.data
 
-    dbQuery.run(
+    await dbQuery.run(
       'INSERT INTO user_settings (user_id, key, value) VALUES (?, ?, ?) ON CONFLICT(user_id, key) DO UPDATE SET value = excluded.value',
       [userId, 'defaultCurrency', defaultCurrency]
     )

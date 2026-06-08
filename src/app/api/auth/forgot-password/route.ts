@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { sendPasswordResetEmail } from '@/lib/email/resend'
 
 const SUCCESS_MSG = 'If an account with that email exists, a reset link has been sent.'
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
-    const user = dbQuery.get<{ id: number; email: string }>(
+    const user = await dbQuery.get<{ id: number; email: string }>(
       'SELECT id, email FROM users WHERE email = ?',
       [email.trim().toLowerCase()]
     )
@@ -20,13 +20,13 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ message: SUCCESS_MSG })
 
     // Invalidate existing unused tokens
-    dbQuery.run(
+    await dbQuery.run(
       "UPDATE password_resets SET used_at = datetime('now') WHERE user_id = ? AND used_at IS NULL",
       [user.id]
     )
 
     const token = crypto.randomBytes(32).toString('hex')
-    dbQuery.run(
+    await dbQuery.run(
       'INSERT INTO password_resets (user_id, token, expires_at) VALUES (?, ?, ?)',
       [user.id, token, new Date(Date.now() + 60 * 60 * 1000).toISOString()]
     )

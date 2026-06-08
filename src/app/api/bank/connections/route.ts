@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { revokeConsent } from '@/lib/setu/client'
+import { audit, AUDIT_ACTIONS } from '@/lib/audit'
 
 /**
  * GET /api/bank/connections
@@ -16,13 +17,13 @@ export async function GET(request: NextRequest) {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const session = dbQuery.get<{ user_id: number }>(
+    const session = await dbQuery.get<{ user_id: number }>(
       "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
       [token]
     )
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const connections = dbQuery.all<{
+    const connections = await dbQuery.all<{
       id: number
       status: string
       bank_name: string | null
@@ -42,8 +43,8 @@ export async function GET(request: NextRequest) {
     )
 
     // Also get transaction count per connection
-    const connectionsWithCounts = connections.map(conn => {
-      const count = dbQuery.get<{ total: number }>(
+    const connectionsWithCounts = await Promise.all(connections.map(async conn => {
+      const count = await dbQuery.get<{ total: number }>(
         'SELECT COUNT(*) as total FROM bank_transactions WHERE bank_connection_id = ?',
         [conn.id]
       )
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
         ...conn,
         transactionCount: count?.total || 0,
       }
-    })
+    }))
 
     return NextResponse.json({ connections: connectionsWithCounts })
   } catch (err) {
@@ -65,7 +66,7 @@ export async function DELETE(request: NextRequest) {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const session = dbQuery.get<{ user_id: number }>(
+    const session = await dbQuery.get<{ user_id: number }>(
       "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
       [token]
     )
@@ -79,7 +80,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verify the connection belongs to this user
-    const connection = dbQuery.get<{ id: number; consent_id: string | null; status: string }>(
+    const connection = await dbQuery.get<{ id: number; consent_id: string | null; status: string }>(
       'SELECT id, consent_id, status FROM bank_connections WHERE id = ? AND user_id = ?',
       [connectionId, session.user_id]
     )
@@ -99,9 +100,19 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete associated bank transactions first, then the connection
-    dbQuery.transaction((db) => {
+    await dbQuery.transaction((db) => {
       db.prepare('DELETE FROM bank_transactions WHERE bank_connection_id = ?').run(connectionId)
       db.prepare('DELETE FROM bank_connections WHERE id = ?').run(connectionId)
+    })
+
+    audit({
+      userId: session.user_id,
+      action: AUDIT_ACTIONS.BANK_DISCONNECTED,
+      category: 'bank_sync',
+      resourceType: 'bank_connection',
+      resourceId: connectionId,
+      description: `Bank connection revoked and data deleted`,
+      request,
     })
 
     return NextResponse.json({

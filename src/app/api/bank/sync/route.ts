@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { createDataSession, fetchSessionData } from '@/lib/setu/client'
+import { audit, AUDIT_ACTIONS } from '@/lib/audit'
 
 /**
  * POST /api/bank/sync
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const session = dbQuery.get<{ user_id: number }>(
+    const session = await dbQuery.get<{ user_id: number }>(
       "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
       [token]
     )
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     const userId = session.user_id
 
     // Get active bank connection
-    const connection = dbQuery.get<{ id: number; consent_id: string; bank_name: string | null }>(
+    const connection = await dbQuery.get<{ id: number; consent_id: string; bank_name: string | null }>(
       "SELECT id, consent_id, bank_name FROM bank_connections WHERE user_id = ? AND status = 'active' AND consent_id IS NOT NULL",
       [userId]
     )
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
     try {
       sessionId = await createDataSession(connection.consent_id)
     } catch (err: any) {
-      dbQuery.run(
+      await dbQuery.run(
         "UPDATE bank_connections SET last_sync_error = ?, updated_at = datetime('now') WHERE id = ?",
         [err.message || 'Failed to create data session', connection.id]
       )
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
       for (const txn of transactions) {
         // Check if we already have this transaction (by txn_id)
         if (txn.transactionId) {
-          const existing = dbQuery.get<{ id: number }>(
+          const existing = await dbQuery.get<{ id: number }>(
             'SELECT id FROM bank_transactions WHERE bank_connection_id = ? AND txn_id = ?',
             [connection.id, txn.transactionId]
           )
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
         const type = txn.type === 'CREDIT' ? 'credit' : 'debit'
 
         // Insert bank transaction
-        dbQuery.run(
+        await dbQuery.run(
           `INSERT INTO bank_transactions (
             bank_connection_id, user_id, txn_id, type, amount, currency, date,
             narration, reference, balance_after, is_categorised, created_at, updated_at
@@ -131,10 +132,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Update last sync time
-    dbQuery.run(
+    await dbQuery.run(
       "UPDATE bank_connections SET last_synced_at = datetime('now'), last_sync_error = NULL, updated_at = datetime('now') WHERE id = ?",
       [connection.id]
     )
+
+    audit({
+      userId,
+      action: AUDIT_ACTIONS.DATA_FETCHED,
+      category: 'bank_sync',
+      resourceType: 'bank_connection',
+      resourceId: connection.id,
+      description: `Synced ${synced} transactions, skipped ${skipped} duplicates`,
+      request,
+    })
 
     return NextResponse.json({
       success: true,

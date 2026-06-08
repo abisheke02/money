@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import { hashPassword, verifyPassword } from '@/lib/auth/password'
 
-function getUserId(request: NextRequest): number | null {
+async function getUserId(request: NextRequest): Promise<number | null> {
   const token = (request.headers.get('authorization') ?? '').replace('Bearer ', '')
   if (!token) return null
-  const session = dbQuery.get<{ user_id: number }>(
+  const session = await dbQuery.get<{ user_id: number }>(
     "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
     [token]
   )
@@ -18,10 +18,10 @@ function getUserId(request: NextRequest): number | null {
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = getUserId(request)
+    const userId = await getUserId(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const user = dbQuery.get<{
+    const user = await dbQuery.get<{
       id: number
       username: string
       email: string
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
     // Get active plan
-    const sub = dbQuery.get<{ plan: string; status: string; expires_at: string | null }>(
+    const sub = await dbQuery.get<{ plan: string; status: string; expires_at: string | null }>(
       "SELECT plan, status, expires_at FROM subscriptions WHERE user_id = ? AND status = 'active' ORDER BY created_at DESC LIMIT 1",
       [userId]
     )
@@ -59,19 +59,19 @@ export async function GET(request: NextRequest) {
  * Update profile fields. Supports:
  *   - { username: "newname" }
  *   - { email: "new@email.com" }
- *   - { currentPassword=[REDACTED_PASSWORD] newPassword=[REDACTED_PASSWORD] }
+ *   - { currentPassword: "...", newPassword: "..." }
  * 
  * Each field is updated independently.
  */
 export async function PATCH(request: NextRequest) {
   try {
-    const userId = getUserId(request)
+    const userId = await getUserId(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
     const { username, email, currentPassword, newPassword } = body
 
-    const user = dbQuery.get<{ id: number; username: string; email: string; password=[REDACTED_PASSWORD] }>(
+    const user = await dbQuery.get<{ id: number; username: string; email: string; password: string }>(
       'SELECT id, username, email, password FROM users WHERE id = ?',
       [userId]
     )
@@ -89,7 +89,7 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: 'Username can only contain letters, numbers, and underscores' }, { status: 400 })
       }
       // Check uniqueness
-      const existing = dbQuery.get<{ id: number }>(
+      const existing = await dbQuery.get<{ id: number }>(
         'SELECT id FROM users WHERE username = ? AND id != ?',
         [username, userId]
       )
@@ -106,7 +106,7 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid email address' }, { status: 400 })
       }
       // Check uniqueness
-      const existing = dbQuery.get<{ id: number }>(
+      const existing = await dbQuery.get<{ id: number }>(
         'SELECT id FROM users WHERE email = ? AND id != ?',
         [email, userId]
       )
@@ -130,7 +130,7 @@ export async function PATCH(request: NextRequest) {
       }
 
       const hashed = await hashPassword(newPassword)
-      updates.push('password=[REDACTED_PASSWORD]')
+      updates.push('password = ?')
       params.push(hashed)
     }
 
@@ -140,7 +140,7 @@ export async function PATCH(request: NextRequest) {
 
     // Apply updates
     params.push(userId)
-    dbQuery.run(
+    await dbQuery.run(
       `UPDATE users SET ${updates.join(', ')}, updated_at = datetime('now') WHERE id = ?`,
       params
     )

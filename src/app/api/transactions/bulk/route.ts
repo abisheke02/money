@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import db from '@/lib/db'
+import db from '@/lib/db.async'
 import { z } from 'zod'
 import { CreateTransactionSchema } from '@/lib/schemas'
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
     const { transactions } = parsed.data
 
-    const results = db.transaction((tx) => {
+    const results = await db.transaction((tx) => {
       const stmt = tx.prepare(`
         INSERT INTO transactions (type, amount, category_id, business_id, currency, date, due_date, reminder_days, note, method, tags, status, client_name, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
@@ -77,7 +77,7 @@ export async function PUT(request: Request) {
 
     const query = `UPDATE transactions SET ${setClauses.join(', ')} WHERE id IN (${ids.map(() => '?').join(',')})`
     
-    db.run(query, [...params, ...ids])
+    await db.run(query, [...params, ...ids])
 
     return NextResponse.json({ success: true, count: ids.length })
   } catch (error) {

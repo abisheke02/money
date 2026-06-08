@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'CSV must have columns: date, type, amount' }, { status: 400 })
     }
 
-    const categories = dbQuery.all<{ id: number; name: string }>('SELECT id, name FROM categories')
+    const categories = await dbQuery.all<{ id: number; name: string }>('SELECT id, name FROM categories')
     const now = new Date().toISOString()
     let imported = 0
     let skipped = 0
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
       const category = categories.find(c => c.name.toLowerCase() === catName.toLowerCase())
 
-      dbQuery.run(
+      await dbQuery.run(
         `INSERT INTO transactions
            (type, amount, category_id, business_id, currency, date, note, method, tags, status, created_at, updated_at)
          VALUES (?, ?, ?, ?, 'INR', ?, ?, ?, ?, 'completed', ?, ?)`,

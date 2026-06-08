@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbQuery from '@/lib/db'
+import dbQuery from '@/lib/db.async'
 import crypto from 'crypto'
 
 // Instant demo login — no password required.
 // Accepts ?role=parent|child|user (all map to the 'demo' account for now).
 export async function GET(request: NextRequest) {
   try {
-    const user = dbQuery.get<{ id: number; username: string }>(
+    const user = await dbQuery.get<{ id: number; username: string }>(
       "SELECT id, username FROM users WHERE username = 'demo'"
     )
 
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const sessionToken = crypto.randomUUID()
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
-    dbQuery.run(
+    await dbQuery.run(
       'INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)',
       [user.id, sessionToken, expiresAt]
     )

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import db from '@/lib/db'
+import db from '@/lib/db.async'
 import { sendPlanUpgradeEmail } from '@/lib/email/resend'
 
 const BILLING_DAYS: Record<string, number> = {
@@ -40,13 +40,13 @@ export async function POST(request: NextRequest) {
     expiryDate.setDate(expiryDate.getDate() + days)
     const expiryIso = expiryDate.toISOString()
 
-    const user = db.get<{ id: number; email: string }>('SELECT id, email FROM users WHERE id = ?', [parseInt(userId)])
+    const user = await db.get<{ id: number; email: string }>('SELECT id, email FROM users WHERE id = ?', [parseInt(userId)])
 
     if (user) {
       const amountPaid = BILLING_AMOUNTS[plan]?.[billing] ?? (plan === 'premium' ? 499 : 199)
       const notes = `Billing: ${billing} | Order: ${razorpay_order_id} | Payment: ${razorpay_payment_id}`
 
-      db.run(`
+      await db.run(`
         INSERT INTO subscriptions (user_id, plan, status, expires_at, amount_paid, payment_method, notes)
         VALUES (?, ?, 'active', ?, ?, 'razorpay', ?)
       `, [user.id, plan, expiryIso, amountPaid, notes])

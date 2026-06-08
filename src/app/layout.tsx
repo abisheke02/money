@@ -4,6 +4,7 @@ import './globals.css'
 import { ThemeProvider } from '@/lib/contexts/ThemeContext'
 import { GlobalErrorToast } from '@/app/components/GlobalErrorToast'
 import PWAInstallPrompt from '@/app/components/PWAInstallPrompt'
+import { CookieBanner } from '@/app/components/CookieBanner'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <GlobalErrorToast />
           <PWAInstallPrompt />
+          <CookieBanner />
         </ThemeProvider>
         <Script
           id="razorpay-checkout-js"

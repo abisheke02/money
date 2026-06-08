@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import db from '@/lib/db'
+import db from '@/lib/db.async'
 import { transactionSchema } from '@/lib/schemas'
 
-function getUserId(request: NextRequest): number | null {
+async function getUserId(request: NextRequest): Promise<number | null> {
   const token = request.headers.get('authorization')?.replace('Bearer ', '')
   if (!token) return null
-  const session = db.get<{ user_id: number }>(
+  const session = await db.get<{ user_id: number }>(
     "SELECT user_id FROM sessions WHERE token = ? AND expires_at > datetime('now')",
     [token]
   )
   return session?.user_id ?? null
 }
 
-function ownsTransaction(userId: number, txId: string): boolean {
-  const tx = db.get<{ business_id: number }>(
+async function ownsTransaction(userId: number, txId: string): Promise<boolean> {
+  const tx = await db.get<{ business_id: number }>(
     'SELECT t.business_id FROM transactions t JOIN businesses b ON b.id = t.business_id WHERE t.id = ? AND b.user_id = ?',
     [txId, userId]
   )
@@ -22,10 +22,10 @@ function ownsTransaction(userId: number, txId: string): boolean {
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const transaction = db.get('SELECT * FROM transactions WHERE id = ?', [params.id]) as any
+    const transaction = await db.get('SELECT * FROM transactions WHERE id = ?', [params.id]) as any
     if (!transaction) return NextResponse.json({ error: 'Transaction not found' }, { status: 404 })
 
-    const categories = db.all('SELECT * FROM categories') as any[]
+    const categories = await db.all('SELECT * FROM categories') as any[]
     const cat = categories.find(c => c.id === transaction.category_id)
 
     return NextResponse.json({
@@ -41,9 +41,9 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const userId = getUserId(request)
+    const userId = await getUserId(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    if (!ownsTransaction(userId, params.id)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!await ownsTransaction(userId, params.id)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await request.json()
     const validation = transactionSchema.safeParse(body)
@@ -51,7 +51,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     const { type, amount, category_id, business_id, currency, date, due_date, reminder_days, note, method, tags, status, client_name } = validation.data
 
-    const { transaction, cat } = db.transaction((tx) => {
+    const { transaction, cat } = await db.transaction((tx) => {
       tx.prepare(`
         UPDATE transactions
         SET type = ?, amount = ?, category_id = ?, business_id = ?, currency = ?, date = ?, due_date = ?, reminder_days = ?, note = ?, method = ?, tags = ?, status = ?, client_name = ?, updated_at = datetime('now')
@@ -77,11 +77,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const userId = getUserId(request)
+    const userId = await getUserId(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    if (!ownsTransaction(userId, params.id)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!await ownsTransaction(userId, params.id)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-    db.transaction((tx) => { tx.prepare('DELETE FROM transactions WHERE id = ?').run(params.id) })
+    await db.transaction((tx) => { tx.prepare('DELETE FROM transactions WHERE id = ?').run(params.id) })
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Transaction delete error:', error)
