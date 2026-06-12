@@ -252,4 +252,13 @@ export async function revokeConsent(consentId: string): Promise<void> {
   }
 }
 
+/**
+ * Whether real Setu AA credentials are configured.
+ * When false, the bank-connect routes fall back to a local mock flow
+ * so the UI can be exercised without a live Setu sandbox account.
+ */
+export function isSetuConfigured(): boolean {
+  return Boolean(SETU_CLIENT_ID && SETU_CLIENT_SECRET)
+}
+
 export { SETU_BASE_URL, SETU_FIU_ID, APP_URL }

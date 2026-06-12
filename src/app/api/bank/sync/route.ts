@@ -1,6 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbQuery from '@/lib/db'
 import { createDataSession, fetchSessionData } from '@/lib/setu/client'
+import crypto from 'crypto'
+
+const MOCK_NARRATIONS: Array<{ type: 'credit' | 'debit'; narration: string; min: number; max: number }> = [
+  { type: 'credit', narration: 'SALARY CREDIT - ACME CORP', min: 45000, max: 90000 },
+  { type: 'debit', narration: 'SWIGGY ORDER', min: 150, max: 800 },
+  { type: 'debit', narration: 'ELECTRICITY BILL PAYMENT', min: 800, max: 2500 },
+  { type: 'debit', narration: 'AMAZON SHOPPING', min: 300, max: 4000 },
+  { type: 'debit', narration: 'RENT PAYMENT', min: 8000, max: 25000 },
+  { type: 'debit', narration: 'UPI-GROCERY STORE', min: 200, max: 1500 },
+  { type: 'credit', narration: 'INTEREST CREDIT', min: 50, max: 500 },
+]
+
+function generateMockTransactions(count: number) {
+  const txns = []
+  for (let i = 0; i < count; i++) {
+    const pick = MOCK_NARRATIONS[Math.floor(Math.random() * MOCK_NARRATIONS.length)]
+    const amount = Math.round(pick.min + Math.random() * (pick.max - pick.min))
+    const daysAgo = Math.floor(Math.random() * 30)
+    const date = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    txns.push({
+      transactionId: `mock-${crypto.randomUUID()}`,
+      type: pick.type === 'credit' ? 'CREDIT' : 'DEBIT',
+      amount,
+      currentBalance: null,
+      transactionTimestamp: `${date}T00:00:00Z`,
+      narration: pick.narration,
+      reference: null,
+    })
+  }
+  return txns
+}
 
 /**
  * POST /api/bank/sync
@@ -37,6 +68,39 @@ export async function POST(request: NextRequest) {
         { error: 'No active bank connection found. Please connect a bank account first.' },
         { status: 404 }
       )
+    }
+
+    // Mock connection (no Setu credentials configured) — generate fake data instead
+    if (connection.consent_id.startsWith('mock-')) {
+      const mockData = generateMockTransactions(3 + Math.floor(Math.random() * 3))
+      let synced = 0
+
+      for (const txn of mockData) {
+        const txnDate = txn.transactionTimestamp.split('T')[0]
+        const type = txn.type === 'CREDIT' ? 'credit' : 'debit'
+
+        dbQuery.run(
+          `INSERT INTO bank_transactions (
+            bank_connection_id, user_id, txn_id, type, amount, currency, date,
+            narration, reference, balance_after, is_categorised, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, 'INR', ?, ?, ?, ?, 0, datetime('now'), datetime('now'))`,
+          [connection.id, userId, txn.transactionId, type, txn.amount, txnDate, txn.narration, txn.reference, txn.currentBalance]
+        )
+        synced++
+      }
+
+      dbQuery.run(
+        "UPDATE bank_connections SET last_synced_at = datetime('now'), last_sync_error = NULL, updated_at = datetime('now') WHERE id = ?",
+        [connection.id]
+      )
+
+      return NextResponse.json({
+        success: true,
+        message: `Synced ${synced} new transaction${synced !== 1 ? 's' : ''}`,
+        synced,
+        skipped: 0,
+        bankName: connection.bank_name,
+      })
     }
 
     // Create a data session with Setu
