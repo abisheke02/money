@@ -29,12 +29,16 @@ export async function GET(request: NextRequest) {
       bank_name: string | null
       masked_account_number: string | null
       account_type: string | null
+      ifsc_code: string | null
+      branch_name: string | null
+      fip_id: string | null
       consent_expiry: string | null
       last_synced_at: string | null
       last_sync_error: string | null
       created_at: string
     }>(
       `SELECT id, status, bank_name, masked_account_number, account_type,
+              ifsc_code, branch_name, fip_id,
               consent_expiry, last_synced_at, last_sync_error, created_at
        FROM bank_connections
        WHERE user_id = ?
@@ -89,8 +93,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Connection not found' }, { status: 404 })
     }
 
-    // Revoke consent with Setu if it's active
-    if (connection.consent_id && connection.status === 'active') {
+    // Revoke consent with Setu if it's active (skip for local mock connections)
+    if (connection.consent_id && connection.status === 'active' && !connection.consent_id.startsWith('mock-')) {
       try {
         await revokeConsent(connection.consent_id)
       } catch (err) {
