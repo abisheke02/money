@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '../../../admin/_auth'
+import { requireAdmin } from '../_auth'
 import dbQuery from '@/lib/db'
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {

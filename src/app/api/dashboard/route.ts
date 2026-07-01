@@ -1,5 +1,11 @@
+export const dynamic = 'force-dynamic'
+
 import { NextResponse } from 'next/server'
 import db from '@/lib/db'
+
+interface BalanceRow { balance: number }
+interface PendingRow { pending: number }
+interface StatsRow { credit: number; debit: number }
 
 export async function GET(request: Request) {
   try {
@@ -18,39 +24,39 @@ export async function GET(request: Request) {
     monthStart.setDate(1)
     const monthStartStr = monthStart.toISOString().split('T')[0]
 
-    const totalBalance = db.get(`
-      SELECT 
+    const totalBalance = db.get<BalanceRow>(`
+      SELECT
         COALESCE(SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END), 0) -
         COALESCE(SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END), 0) as balance
       FROM transactions
       WHERE business_id = ? AND status = 'completed'
     `, [businessId])
 
-    const totalPending = db.get(`
-      SELECT 
+    const totalPending = db.get<PendingRow>(`
+      SELECT
         COALESCE(SUM(CASE WHEN status = 'pending' AND type = 'credit' THEN amount WHEN status = 'pending' AND type = 'debit' THEN -amount ELSE 0 END), 0) as pending
       FROM transactions
       WHERE business_id = ?
     `, [businessId])
 
-    const todayStats = db.get(`
-      SELECT 
+    const todayStats = db.get<StatsRow>(`
+      SELECT
         COALESCE(SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END), 0) as credit,
         COALESCE(SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END), 0) as debit
       FROM transactions
       WHERE date = ? AND business_id = ?
     `, [today, businessId])
 
-    const weekStats = db.get(`
-      SELECT 
+    const weekStats = db.get<StatsRow>(`
+      SELECT
         COALESCE(SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END), 0) as credit,
         COALESCE(SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END), 0) as debit
       FROM transactions
       WHERE date >= ? AND business_id = ?
     `, [weekStartStr, businessId])
 
-    const monthStats = db.get(`
-      SELECT 
+    const monthStats = db.get<StatsRow>(`
+      SELECT
         COALESCE(SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END), 0) as credit,
         COALESCE(SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END), 0) as debit
       FROM transactions

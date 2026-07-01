@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import db from '@/lib/db'
 import { CreateTransactionSchema, TransactionFiltersSchema } from '@/lib/schemas'
@@ -60,7 +62,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     const parsed = CreateTransactionSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
     }
     const { type, amount, category_id, business_id, currency, date, due_date, reminder_days, note, method, tags, status, client_name } = parsed.data
     const result = db.run(

@@ -1,7 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
-
 interface SkeletonProps {
   className?: string
   variant?: 'rectangular' | 'circular' | 'text'
@@ -17,17 +15,7 @@ export default function LoadingSkeleton({ className = '', variant = 'rectangular
 
   return (
     <div className={`${baseStyles} ${variantStyles[variant]} ${className}`}>
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-[#94A3B8]/10 to-transparent"
-        animate={{
-          x: ['-100%', '100%']
-        }}
-        transition={{
-          repeat: Infinity,
-          duration: 1.5,
-          ease: 'linear'
-        }}
-      />
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#94A3B8]/10 to-transparent animate-shimmer" />
     </div>
   )
 }

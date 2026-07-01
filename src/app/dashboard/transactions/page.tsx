@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -17,7 +18,7 @@ import { cn } from '@/lib/utils/format'
 
 import { usePlan } from '@/lib/contexts/PlanContext'
 
-export default function TransactionsPage() {
+function TransactionsPageContent() {
   const router = useRouter()
   const { activeBusiness, loading: businessLoading } = useBusiness()
   const { can } = usePlan()
@@ -272,7 +273,6 @@ export default function TransactionsPage() {
             </div>
           )}
         </div>
->
       </div>
 
       {/* Modal */}
@@ -360,5 +360,13 @@ export default function TransactionsPage() {
         document.body
       )}
     </div>
+  )
+}
+
+export default function TransactionsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">Loading...</div>}>
+      <TransactionsPageContent />
+    </Suspense>
   )
 }

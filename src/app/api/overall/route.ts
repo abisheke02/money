@@ -1,10 +1,15 @@
+export const dynamic = 'force-dynamic'
+
 import { NextResponse } from 'next/server'
 import db from '@/lib/db'
+
+interface GrandTotalsRow { totalIncome: number; totalExpense: number; totalPending: number }
+interface BusinessRow { id: number; name: string; income: number; expense: number; pending: number }
 
 export async function GET() {
   try {
     // 1. Get Grand Totals across ALL businesses
-    const grandTotals = db.get(`
+    const grandTotals = db.get<GrandTotalsRow>(`
       SELECT 
         COALESCE(SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END), 0) as totalIncome,
         COALESCE(SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END), 0) as totalExpense,
@@ -18,7 +23,7 @@ export async function GET() {
     const netProfit = totalIncome - totalExpense
 
     // 2. Get breakdown per business
-    const businessBreakdown = db.all(`
+    const businessBreakdown = db.all<BusinessRow>(`
       SELECT 
         b.id,
         b.name,
@@ -31,7 +36,7 @@ export async function GET() {
       ORDER BY b.name ASC
     `)
 
-    const formattedBreakdown = businessBreakdown.map((b: any) => ({
+    const formattedBreakdown = businessBreakdown.map((b) => ({
       id: b.id,
       name: b.name,
       income: b.income,
